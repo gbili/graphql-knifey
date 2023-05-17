@@ -1,14 +1,15 @@
 {
   "name": "graphql-knifey",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Tools for dealing with graphql server side",
-  "main": "index.js",
+  "main": "build/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/mysql": "2.15.8",
     "@apollo/subgraph": "^0.3.3",
     "apollo-server": "^3.12.0",
     "di-why": "^0.15.12",
