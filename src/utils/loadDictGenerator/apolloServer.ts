@@ -29,7 +29,7 @@ export type LocatorHandles = { appConfig: string; apolloContext: string; logger:
  * @param typeDefs result of gql`my type definitions` (import graphqlSchema from '../graphql/schema')
  * @returns LoadDictElement<GetInstanceType<typeof ApolloServer>>
  */
-function loadDictElementGen<AppConfig extends ApolloServerConfigParams>(
+function loadDictElementGen(
   resolvers: Resolvers<any>,
   typeDefs: ReturnType<typeof gql>,
   {
@@ -45,7 +45,7 @@ function loadDictElementGen<AppConfig extends ApolloServerConfigParams>(
 
   const loadDictElement: LoadDictElement<GetInstanceType<typeof ApolloServer>> = {
     before: async function ({ deps, serviceLocator }) {
-      const { corsAllowedOrigin, nodeEnv, graphqlPlayground, graphqlIntrospection } = await serviceLocator.get<AppConfig>(appConfigHandle);
+      const { corsAllowedOrigin, nodeEnv, graphqlPlayground, graphqlIntrospection } = await serviceLocator.get<ApolloServerConfigParams>(appConfigHandle);
       console.log(nodeEnv, graphqlIntrospection, graphqlPlayground);
       return {
         ...deps,
@@ -71,7 +71,7 @@ function loadDictElementGen<AppConfig extends ApolloServerConfigParams>(
     },
     async after({ me, serviceLocator }) {
       const logger = await serviceLocator.get<InstanceType<typeof Logger>>(loggerHandle);
-      const { serverPort, graphqlPath, applicationName } = await serviceLocator.get<AppConfig>(appConfigHandle);
+      const { serverPort, graphqlPath, applicationName } = await serviceLocator.get<ApolloServerConfigParams>(appConfigHandle);
       try {
         const { url } = await me.listen({ port: serverPort, path: graphqlPath }, () => {
           logger.log(`🚀 ${applicationName.repeat(5)} 🚀`);
