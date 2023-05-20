@@ -4,15 +4,21 @@ import { LoadDictElement, GetInstanceType } from 'di-why/build/src/DiContainer';
 import { sleep } from 'swiss-army-knifey';
 
 const loadDictElement: LoadDictElement<GetInstanceType<typeof MysqlReq>> = {
+  before: ({ deps }) => {
+    return {
+      ...deps,
+      connectionConfig: {
+        ...deps.connectionConfig,
+        multipleStatements: false,
+      },
+    }
+  },
   constructible: MysqlReq,
   deps: {
     adapter: mysql,
-    connectionConfig: {
-      multipleStatements: false,
-      ...MysqlReq.extractConfigFromEnv(process.env),
-    },
   },
   locateDeps: {
+    connectionConfig: 'mysqlConnectionConfig',
     logger: 'logger',
   },
   after: async ({ me, deps }) => {

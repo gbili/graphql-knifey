@@ -1,15 +1,11 @@
 import { LoadDictElement } from "di-why/build/src/DiContainer";
-import { EventsInterface } from "jwt-authorized/build/src/loaders/events";
-import { LoggerInterface } from "saylo/build/src/Logger";
+import createStarEvents, { StarEvents } from "../utils/starEvents";
 
-const loadDictElement: LoadDictElement<EventsInterface> = {
-  factory({ logger }: { logger: LoggerInterface }) {
-    const events = {
-      emit(...params: any[]) {
-        logger.log(params);
-      },
-    };
-    return events;
+const loadDictElement: LoadDictElement<StarEvents> = {
+  instance: createStarEvents(),
+  after({ me, deps: { logger } }) {
+    // log all events by default
+    me.on('*', logger.log);
   },
   locateDeps: {
     logger: 'logger',

@@ -1,20 +1,22 @@
 {
   "name": "graphql-knifey",
-  "version": "1.0.2",
+  "version": "2.0.21",
   "description": "Tools for dealing with graphql server side",
-  "main": "build/index.js",
+  "main": "build/src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "tsc && node ./build/test/index.js"
   },
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "@types/mysql": "2.15.8",
+  "peerDependencies": {
     "@apollo/subgraph": "^0.3.3",
+    "@types/mysql": "2.15.8",
     "apollo-server": "^3.12.0",
     "di-why": "^0.15.12",
     "dotenv": "^16.0.3",
+    "express": "^4.18.2",
     "jwt-authorized": "^0.21.4",
+    "mysql": "^2.17.1",
     "mysql-oh-wait": "^0.16.2",
     "swiss-army-knifey": "^1.27.0"
   }

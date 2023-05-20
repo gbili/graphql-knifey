@@ -3,15 +3,21 @@ import { MysqlReq } from 'mysql-oh-wait';
 import { LoadDictElement, GetInstanceType } from 'di-why/build/src/DiContainer';
 
 const loadDictElement: LoadDictElement<GetInstanceType<typeof MysqlReq>> = {
+  before: ({ deps }) => {
+    return {
+      ...deps,
+      connectionConfig: {
+        ...deps.connectionConfig,
+        multipleStatements: true,
+      },
+    };
+  },
   constructible: MysqlReq,
   deps: {
     adapter: mysql,
-    connectionConfig: {
-      multipleStatements: true,
-      ...MysqlReq.extractConfigFromEnv(process.env),
-    },
   },
   locateDeps: {
+    connectionConfig: 'mysqlConnectionConfig',
     logger: 'logger',
   },
 };

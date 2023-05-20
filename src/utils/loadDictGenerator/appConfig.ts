@@ -1,18 +1,18 @@
 import { LoadDictElement } from 'di-why/build/src/DiContainer';
 
-export type UknownEnv = Partial<{ [k: string]: string; }>;
+export type UnknownEnv = Partial<{ [k: string]: string; }>;
+export type AppConfigMap<R = any> = (env: UnknownEnv) => R;
 
-function loadDictElementGen(appConfigGen: (env: UknownEnv) => any) {
-  type AppConfig = ReturnType<typeof appConfigGen>;
-  const loadDictElement: LoadDictElement<AppConfig> = {
+function loadDictElementGen<T extends AppConfigMap<any>>(appConfigMap: T): LoadDictElement<ReturnType<T>> {
+  const loadDictElement: LoadDictElement<ReturnType<T>> = {
     before: async function ({ serviceLocator }) {
       const env = await serviceLocator.get('env');
       return {
         env
       };
     },
-    factory: function ({ env }: { env: UknownEnv}) {
-      return appConfigGen(env);
+    factory: function ({ env }: { env: UnknownEnv}) {
+      return appConfigMap(env);
     },
   };
   return loadDictElement;

@@ -1,30 +1,21 @@
-import { LoadDictElement, LocatableServicesDict } from "di-why/build/src/DiContainer";
-import env from "./loaders/env";
-import events from "./loaders/events";
-import mysqlMultipleReq from "./loaders/mysqlMultipleReq";
-import mysqlReq from "./loaders/mysqlReq";
-import apolloContextLDEGen from "./utils/loadDictGenerator/apolloContext";
-import apolloServerLDEGen, { LocatorHandles, Resolvers } from "./utils/loadDictGenerator/apolloServer";
-import appConfigLDEGen, { UknownEnv } from "./utils/loadDictGenerator/appConfig";
-import { EventsInterface } from "jwt-authorized/build/src/loaders/events";
-import MysqlReq from "mysql-oh-wait";
-import { HeaderAuthTokenExtractor } from "jwt-authorized";
-import { ApolloServer, gql } from "apollo-server";
+import ctx from "./utils/loadDictGenerator/apolloContext";
+import srv from "./utils/loadDictGenerator/apolloServer";
+import cfg from "./utils/loadDictGenerator/appConfig";
+import di from "./loaders";
+import { authenticateRequestAndPlugUserInInput as authenticateHelper } from "./utils/resolverAuthenticateHelper";
+import { getFailOutcomeFromError as getFOFE } from "./utils/getFailOutcomeFromError";
+import { mergeAppConfigMaps as acmMerger } from "./utils/mergeAppConfigMaps";
+import appConfigMap from "./config/appConfig";
 
-export const defaultDict: {
-  env: LoadDictElement<object>;
-  events: LoadDictElement<EventsInterface>;
-  mysqlMultipleReq: LoadDictElement<MysqlReq>;
-  mysqlReq: LoadDictElement<MysqlReq>;
-} = {
-  env,
-  events,
-  mysqlMultipleReq,
-  mysqlReq,
-};
+export const apolloContextLDEGen = ctx;
+export const apolloServerLDEGen = srv;
+export const appConfigLDEGen = cfg;
 
-export const apolloContextGen: (locatableServicesDict: LocatableServicesDict) => LoadDictElement<typeof HeaderAuthTokenExtractor["getAsyncContextReqMethod"]> = apolloContextLDEGen;
-export const apolloServerGen: (resolvers: Resolvers<any>, typeDefs: ReturnType<typeof gql>, handles?: LocatorHandles) => LoadDictElement<ApolloServer> = apolloServerLDEGen;
-export const appConfigGen: (appConfigGen: (env: UknownEnv) => any) => LoadDictElement<ReturnType<typeof appConfigGen>> = appConfigLDEGen;
+export const authenticateRequestAndPlugUserInInput = authenticateHelper;
+export type { GqlResolversContextParams } from "./utils/resolverAuthenticateHelper";
+export const getFailOutcomeFromError = getFOFE;
+export const mergeToDefaultAppConfigMap = acmMerger(appConfigMap);
 
-export default defaultDict;
+export const diContainer = di;
+
+export default diContainer;

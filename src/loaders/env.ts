@@ -32,6 +32,10 @@ if (!hasDBEnvVars(process.env)) {
 
 
 process.env = {
+  ...{
+    LOGGER_LOG: '0',
+    LOGGER_DEBUG: '1',
+  },
   ...process.env,
   ...env,
 }
