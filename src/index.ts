@@ -11,8 +11,9 @@ export const apolloContextLDEGen = ctx;
 export const apolloServerLDEGen = srv;
 export const appConfigLDEGen = cfg;
 
+export type { GQLResolverDict, ActionOutcomeError, ActionOutcomeForbidden, ActionOutcomeSuccess, ActionOutcomeFail, ActionStatus, UUIDProp, UUID } from "./generalTypes";
+
 export const authenticateRequestAndPlugUserInInput = authenticateHelper;
-export type { GqlResolversContextParams } from "./utils/resolverAuthenticateHelper";
 export const getFailOutcomeFromError = getFOFE;
 export const mergeToDefaultAppConfigMap = acmMerger(appConfigMap);
 

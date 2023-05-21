@@ -1,6 +1,6 @@
 import { LoadDictElement } from 'di-why/build/src/DiContainer';
+import { UnknownEnv } from 'swiss-army-knifey';
 
-export type UnknownEnv = Partial<{ [k: string]: string; }>;
 export type AppConfigMap<R = any> = (env: UnknownEnv) => R;
 
 function loadDictElementGen<T extends AppConfigMap<any>>(appConfigMap: T): LoadDictElement<ReturnType<T>> {
