@@ -1,10 +1,13 @@
-import { ApolloServer, gql } from 'apollo-server';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { LoadDictElement, GetInstanceType } from 'di-why/build/src/DiContainer';
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
 import Logger from 'saylo/build/src/Logger';
-import { ApolloServerPluginLandingPageDisabled, ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
+import { ApolloServerPluginLandingPageGraphQLPlayground } from '@apollo/server-plugin-landing-page-graphql-playground';
+import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled';
 import { GraphQLResolverMap } from '@apollo/subgraph/dist/schema-helper/resolverMap';
 import { TypeWithoutUndefined } from '../../generalTypes';
+import gql from 'graphql-tag';
 
 export type Resolvers<Context> = TypeWithoutUndefined<GraphQLResolverMap<Context>>;
 
@@ -73,12 +76,12 @@ function loadDictElementGen(
       const logger = await serviceLocator.get<InstanceType<typeof Logger>>(loggerHandle);
       const { serverPort, graphqlPath, applicationName } = await serviceLocator.get<ApolloServerConfigParams>(appConfigHandle);
       try {
-        const { url } = await me.listen({ port: serverPort, path: graphqlPath }, () => {
-          logger.log(`🚀 ${applicationName.repeat(5)} 🚀`);
-          logger.log(`🚀 ${applicationName.repeat(2)} App: http://localhost:${serverPort}${graphqlPath} ${applicationName.repeat(2)} 🚀`);
-          logger.log(`🚀 ${applicationName.repeat(5)} 🚀`);
+        const { url } = await startStandaloneServer(me, {
+          context: async ({ req }) => ({ token: req.headers.token }),
+          listen: { port: serverPort },
         });
-        logger.log(`🚀 Apollo Server will be ready ready at ${url} 🚀`);
+        logger.log(`🚀 Launching "${applicationName}" 🚀`);
+        logger.log(`🚀 Apollo Server at ${url}:${serverPort}/${graphqlPath} 🚀`);
       } catch (err) {
         logger.error(err);
       }

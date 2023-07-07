@@ -1,17 +1,17 @@
-import TokenAuthService from 'jwt-authorized/build/src/services/TokenAuthService';
-import { TokenUser } from 'jwt-authorized/build/src/models';
-import { LoadDictElement, GetInstanceType } from 'di-why/build/src/DiContainer';
+import { GetInstanceType, LoadDictElement } from "di-why/build/src/DiContainer";
+import { TokenAuthCustomizableService, TokenUser } from "jwt-authorized";
 
-const loadDictElement: LoadDictElement<GetInstanceType<typeof TokenAuthService>> = {
-  constructible: TokenAuthService,
+const loadDictElement: LoadDictElement<GetInstanceType<typeof TokenAuthCustomizableService>> = {
+  constructible: TokenAuthCustomizableService,
   deps: {
     models: {
-      TokenUser
+      TokenUser,
     },
   },
   locateDeps: {
-    tokenConfig: 'tokenConfig',
     events: 'events',
+    env: 'env',
+    tokenConfig: 'tokenConfig',
   },
 };
 

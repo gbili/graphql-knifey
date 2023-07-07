@@ -1,8 +1,8 @@
 import { GraphQLResolverMap } from "@apollo/subgraph/dist/schema-helper/resolverMap";
-import { TokenAuthService } from 'jwt-authorized';
+import { TokenAuthCustomizableService } from 'jwt-authorized';
 
 export type GqlResolversContextParams<T> = {
-  tokenAuthService: TokenAuthService;
+  tokenAuthService: TokenAuthCustomizableService;
   token: string;
 } & T;
 
