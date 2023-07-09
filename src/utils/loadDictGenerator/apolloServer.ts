@@ -49,7 +49,6 @@ function loadDictElementGen(
   const loadDictElement: LoadDictElement<GetInstanceType<typeof ApolloServer>> = {
     before: async function ({ deps, serviceLocator }) {
       const { corsAllowedOrigin, nodeEnv, graphqlPlayground, graphqlIntrospection } = await serviceLocator.get<ApolloServerConfigParams>(appConfigHandle);
-      console.log(nodeEnv, graphqlIntrospection, graphqlPlayground);
       return {
         ...deps,
         plugins: [
@@ -69,19 +68,17 @@ function loadDictElementGen(
         resolvers,
       }),
     },
-    locateDeps: {
-      context: apolloContextHandle,
-    },
     async after({ me, serviceLocator }) {
+      const contextFunction = await serviceLocator.get(apolloContextHandle)
       const logger = await serviceLocator.get<InstanceType<typeof Logger>>(loggerHandle);
       const { serverPort, graphqlPath, applicationName } = await serviceLocator.get<ApolloServerConfigParams>(appConfigHandle);
       try {
         const { url } = await startStandaloneServer(me, {
-          context: async ({ req }) => ({ token: req.headers.token }),
-          listen: { port: serverPort },
+          context: contextFunction,
+          listen: { port: serverPort, path: graphqlPath },
         });
         logger.log(`🚀 Launching "${applicationName}" 🚀`);
-        logger.log(`🚀 Apollo Server at ${url}:${serverPort}/${graphqlPath} 🚀`);
+        logger.log(`🚀 Apollo Server at ${url} 🚀`);
       } catch (err) {
         logger.error(err);
       }
