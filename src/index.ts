@@ -2,6 +2,7 @@ import ctx from "./utils/loadDictGenerator/apolloContext";
 import srv from "./utils/loadDictGenerator/apolloServer";
 import cfg from "./utils/loadDictGenerator/appConfig";
 import deDoub from "./utils/deDoubleEscape";
+import lschem from "./utils/loadSchema";
 import di from "./loaders";
 import { authenticateRequestAndPlugUserInInput as authenticateHelper } from "./utils/resolverAuthenticateHelper";
 import { getFailOutcomeFromError as getFOFE } from "./utils/getFailOutcomeFromError";
@@ -19,6 +20,7 @@ export const getFailOutcomeFromError = getFOFE;
 export const mergeToDefaultAppConfigMap = acmMerger(appConfigMap);
 
 export const deDoubleEscape = deDoub;
+export const loadSchema = lschem;
 
 export const diContainer = di;
 
