@@ -1,3 +1,4 @@
+import { IncomingMessage } from "http";
 import { HeaderAuthTokenExtractor } from "jwt-authorized";
 
 export type GraphqlContext = { [k: string]: any; }
@@ -8,14 +9,7 @@ export type AugmentedContext<C extends GraphqlContext> = C & ContextAugmentation
 
 export type GraphqlRequestContainer<C extends GraphqlContext = GraphqlContext, H = {}> = {
   context: C;
-  req: {
-    headers?: {
-      'x-forwarded-for'?: string;
-    } & H;
-    socket?: {
-      remoteAddress?: string;
-    }
-  };
+  req: IncomingMessage;
 };
 
 async function plugIPAddressIntoContext<C extends GraphqlContext>({ req: { headers, socket }, context }: GraphqlRequestContainer<C>): Promise<AugmentedContext<C>> {
