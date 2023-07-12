@@ -1,9 +1,9 @@
-import { GqlResolversContextParams } from "../generalTypes";
+import { AuthenticateRequestAndPlugUserInInputParam } from "../generalTypes";
 
-export function authenticateRequestAndPlugUserInInput<T extends {}, Z>({ tokenAuthService, token }: Z extends GqlResolversContextParams<infer H> ? Z : never, input: T) {
+export function authenticateRequestAndPlugUserInInput<T extends {}>({ tokenAuthService, token }: AuthenticateRequestAndPlugUserInInputParam, input?: T) {
   const { token: notNeeded, ...user } = tokenAuthService.authenticateTokenStrategy({ token, tokenConfig: {} });
   if (typeof user !== 'object' || user.UUID === undefined) {
     throw new Error('Unable to authenticate from token.');
   }
-  return { ...input, user };
+  return { ...(input ? input : {}), user };
 }

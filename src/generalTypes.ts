@@ -1,10 +1,17 @@
 import { GraphQLResolverMap } from "@apollo/subgraph/dist/schema-helper/resolverMap";
+import { IncomingMessage } from "http";
 import { TokenAuthCustomizableService } from 'jwt-authorized';
 
 export type GqlResolversContextParams<T> = {
   tokenAuthService: TokenAuthCustomizableService;
   token: string;
+  req: IncomingMessage;
 } & T;
+
+export type AuthenticateRequestAndPlugUserInInputParam = {
+  tokenAuthService: TokenAuthCustomizableService;
+  token: string;
+}
 
 export type TypeWithoutUndefined<T> = T extends undefined ? never : T;
 
