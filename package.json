@@ -1,6 +1,6 @@
 {
   "name": "graphql-knifey",
-  "version": "2.2.2",
+  "version": "2.2.3",
   "description": "Tools for dealing with graphql server side",
   "main": "build/src/index.js",
   "scripts": {
@@ -17,7 +17,7 @@
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "graphql-tag": "^2.12.6",
-    "jwt-authorized": "^0.21.7",
+    "jwt-authorized": "^0.21.8",
     "mysql-oh-wait": "^0.17.0",
     "swiss-army-knifey": "^1.27.3"
   }
