@@ -1,5 +1,6 @@
 # db backups
 db-backups/
+.DS_Store
 # build
 build/
 # nyc
