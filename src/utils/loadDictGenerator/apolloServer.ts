@@ -49,7 +49,6 @@ function loadDictElementGen(
     logger: 'logger',
   }
 ) {
-
   const loadDictElement: LoadDictElement<GetInstanceType<typeof ApolloServer>> = {
     before: async function ({ deps, serviceLocator }) {
       const { nodeEnv, graphqlPlayground, graphqlIntrospection } = await serviceLocator.get<ApolloServerConfigParams>(appConfigHandle);
