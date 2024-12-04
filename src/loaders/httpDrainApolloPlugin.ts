@@ -4,7 +4,7 @@ import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHt
 const loadDictElement: LoadDictElement<ReturnType<typeof ApolloServerPluginDrainHttpServer>> = {
   factory: ({ httpServer }) => ApolloServerPluginDrainHttpServer({ httpServer }),
   locateDeps: {
-    app: 'httpServer',
+    httpServer: 'httpServer',
   }
 };
 
