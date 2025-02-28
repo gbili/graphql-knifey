@@ -1,13 +1,13 @@
 import env from "./env";
 import events from "./events";
 import { tokenAuthServiceLDEs } from "./tokenAuthService";
-import { mysqlReqLDEs } from "./mysqlReq";
 import DiContainer from "di-why";
 import { loggerGen } from "swiss-army-knifey";
 import appConfigMap from "../config/appConfig";
 import appConfigLDEGen from "../utils/loadDictGenerator/appConfig";
 import { LoadDict } from "di-why/build/src/DiContainer";
 import { apolloDepsDict } from "../utils/loadDictGenerator/apolloDepsDict";
+import { mysqlReqLoader as mysqlReq, mysqlMultipleReqLoader as mysqlMultipleReq } from "mysql-oh-wait-utils";
 
 const logger = loggerGen({ LOGGER_DEBUG: false, LOGGER_LOG: true, });
 
@@ -17,7 +17,8 @@ export const injectionDict: LoadDict = {
   env,
   events,
   logger: { instance: logger },
-  ...mysqlReqLDEs,
+  mysqlReq,
+  mysqlMultipleReq,
   ...tokenAuthServiceLDEs,
 };
 

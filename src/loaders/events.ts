@@ -1,8 +1,7 @@
 import { LoadDictElement } from "di-why/build/src/DiContainer";
 import { createStarEvents } from "swiss-army-knifey";
-import { EventEmitter } from "swiss-army-knifey/build/src/utils/starEvents";
 
-const loadDictElement: LoadDictElement<EventEmitter> = {
+const loadDictElement: LoadDictElement<ReturnType<typeof createStarEvents>> = {
   instance: createStarEvents(),
   after({ me, deps: { logger } }) {
     // log all events by default

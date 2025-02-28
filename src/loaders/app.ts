@@ -1,6 +1,6 @@
 import express from 'express';
 import { LoadDictElement } from 'di-why/build/src/DiContainer';
-import { Logger } from 'swiss-army-knifey/build/src/utils/logger';
+import { type Logger } from 'saylo';
 
 export type Application = ReturnType<typeof express>;
 

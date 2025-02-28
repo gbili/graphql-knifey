@@ -2,7 +2,7 @@ import { buildSubgraphSchema } from '@apollo/subgraph';
 import { expressMiddleware } from '@apollo/server/express4';
 import { LoadDictElement, GetInstanceType } from 'di-why/build/src/DiContainer';
 import { ApolloServer } from '@apollo/server';
-import Logger from 'saylo/build/src/Logger';
+import { type Logger } from 'saylo';
 import { ApolloServerPluginLandingPageGraphQLPlayground } from '@apollo/server-plugin-landing-page-graphql-playground';
 import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled';
 import { GraphQLResolverMap } from '@apollo/subgraph/dist/schema-helper/resolverMap';
@@ -77,7 +77,7 @@ function loadDictElementGen(
     },
     async after({ me: server, serviceLocator }) {
       const contextFunction = await serviceLocator.get(apolloContextHandle)
-      const logger = await serviceLocator.get<InstanceType<typeof Logger>>(loggerHandle);
+      const logger = await serviceLocator.get<Logger>(loggerHandle);
       const app = await serviceLocator.get<Application>('app');
       const httpServer = await serviceLocator.get<HttpServer>('httpServer');
       const { serverPort, graphqlPath, applicationName } = await serviceLocator.get<ApolloServerConfigParams>(appConfigHandle);
@@ -103,7 +103,7 @@ function loadDictElementGen(
         await new Promise<void>(resolve => httpServer.listen({ port: serverPort }, resolve));
         logger.log(`🚀 Apollo Server at http://localhost:${serverPort}/${graphqlPath}`);
       } catch (err) {
-        logger.error(err);
+        logger.error("Error starting server", err);
       }
     },
   };
