@@ -13,7 +13,8 @@ export type GraphqlRequestContainer<C extends GraphqlContext = GraphqlContext, H
 };
 
 async function plugIPAddressIntoContext<C extends GraphqlContext>({ req: { headers, socket }, context }: GraphqlRequestContainer<C>): Promise<AugmentedContext<C>> {
-  const IP = headers && (headers['x-forwarded-for'] || (socket && socket.remoteAddress) || null);
+  const raw = headers?.['x-forwarded-for'] ?? socket?.remoteAddress ?? undefined;
+  const IP = Array.isArray(raw) ? raw[0] : raw;
   return (
     IP !== null
     ? {
