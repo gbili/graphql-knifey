@@ -25,9 +25,11 @@ async function plugIPAddressIntoContext<C extends GraphqlContext>({ req: { heade
   );
 };
 
-export const extractTokenAndIPAddressFromRequestIntoContext = (me: typeof HeaderAuthTokenExtractor) => (context: GraphqlContext) => async (requestContainer: GraphqlRequestContainer<GraphqlContext, { authorization?: string; }>) => {
-  const nextContext: GraphqlContext & { token?: string; } = await (me.getAsyncContextReqMethod(context))(requestContainer);
-  return await plugIPAddressIntoContext({ ...requestContainer, context: nextContext });
+export const extractTokenAndIPAddressFromRequestIntoContext = (me: typeof HeaderAuthTokenExtractor, context: GraphqlContext) => {
+  return async (requestContainer: GraphqlRequestContainer<GraphqlContext, { authorization?: string; }>) => {
+    const nextContext: GraphqlContext & { token?: string; } = await (me.getAsyncContextReqMethod(context))(requestContainer);
+    return await plugIPAddressIntoContext({ ...requestContainer, context: nextContext });
+  }
 };
 
 export default plugIPAddressIntoContext;

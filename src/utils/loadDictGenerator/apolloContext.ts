@@ -8,7 +8,7 @@ function loadDictElementGen(locatableServices: LocatableServicesDict) {
     instance: HeaderAuthTokenExtractor,
     async after({ me, serviceLocator }: { me: typeof HeaderAuthTokenExtractor; serviceLocator: { get: <T>(p: string) => Promise<T>}; }) {
       const context = await entriesMap(locatableServices, serviceLocator.get.bind(serviceLocator));
-      return extractTokenAndIPAddressFromRequestIntoContext(me)(context);
+      return extractTokenAndIPAddressFromRequestIntoContext(me, context);
     },
   };
   return loadDictElement;
