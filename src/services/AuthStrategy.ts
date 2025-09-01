@@ -1,6 +1,7 @@
 import { SessionServiceInterface } from './SessionService';
 import { LoadDictElement, GetInstanceType } from 'di-why/build/src/DiContainer';
 import { ActionStatus } from '../generalTypes';
+import { TokenPayload, GenerateTokenParams, VerifyTokenParams } from '../types/auth.types';
 
 export interface AuthResult {
   success: boolean;
@@ -129,10 +130,18 @@ export class CookieSessionStrategy implements AuthStrategy {
   }
 }
 
+// Interface for token auth service
+interface TokenAuthService {
+  generateToken(params: GenerateTokenParams): string | Promise<string>;
+  verifyToken(params: VerifyTokenParams): TokenPayload | false | Promise<TokenPayload | false>;
+  authenticateTokenStrategy(params: { token: string; tokenConfig?: any }): Promise<{ status: ActionStatus; user?: any; userInfo?: any }>;
+  blacklistToken?(token: string): Promise<void>;
+}
+
 // JWT strategy for backward compatibility
 export class JWTStrategy implements AuthStrategy {
   constructor(
-    private tokenAuthService: any, // jwt-authorized service
+    private tokenAuthService: TokenAuthService,
     private userValidator: UserValidator
   ) {}
 
@@ -177,16 +186,18 @@ export class JWTStrategy implements AuthStrategy {
 
   async validate(token: string): Promise<ValidationResult> {
     try {
-      const tokenUser = await this.tokenAuthService.authenticateTokenStrategy({
+      const result = await this.tokenAuthService.authenticateTokenStrategy({
         token,
         tokenConfig: {},
       });
 
+      // Handle both user and userInfo properties
+      const userInfo = result.userInfo || result.user;
       return {
         valid: true,
-        userId: tokenUser.userInfo.UUID,
-        user: tokenUser,
-        metadata: tokenUser.userInfo,
+        userId: userInfo?.UUID,
+        user: result.user || result.userInfo,
+        metadata: userInfo,
       };
     } catch (error) {
       return { valid: false };

@@ -1,8 +1,9 @@
 import { LoadDictElement, GetInstanceType } from 'di-why/build/src/DiContainer';
+import { SessionMetadata } from '../types/auth.types';
 
 export interface SessionData {
   userId: string;
-  metadata?: Record<string, any>;
+  metadata?: SessionMetadata;
   createdAt?: number;
   lastAccessedAt?: number;
 }
@@ -10,7 +11,7 @@ export interface SessionData {
 export interface RefreshData {
   userId: string;
   sessionId?: string;
-  metadata?: Record<string, any>;
+  metadata?: SessionMetadata;
   createdAt?: number;
 }
 
@@ -21,13 +22,13 @@ export interface SessionConfig {
 }
 
 export interface SessionServiceInterface {
-  create(userId: string, metadata?: Record<string, any>): Promise<{ sessionId: string; refreshId: string }>;
+  create(userId: string, metadata?: SessionMetadata): Promise<{ sessionId: string; refreshId: string }>;
   validate(sessionId: string): Promise<SessionData | null>;
   refresh(refreshId: string): Promise<{ sessionId: string; refreshId: string } | null>;
   revoke(sessionId: string): Promise<void>;
   revokeRefresh(refreshId: string): Promise<void>;
   revokeAllUserSessions(userId: string): Promise<void>;
-  updateSessionMetadata(sessionId: string, metadata: Record<string, any>): Promise<boolean>;
+  updateSessionMetadata(sessionId: string, metadata: SessionMetadata): Promise<boolean>;
 }
 
 export interface StorageInterface {
@@ -61,7 +62,7 @@ export class SessionService implements SessionServiceInterface {
     return `${this.prefix}user:${userId}:sessions`;
   }
 
-  async create(userId: string, metadata?: Record<string, any>): Promise<{ sessionId: string; refreshId: string }> {
+  async create(userId: string, metadata?: SessionMetadata): Promise<{ sessionId: string; refreshId: string }> {
     console.log('[SESSION DEBUG] SessionService.create called for user:', userId);
     const sessionId = this.uuid();
     const refreshId = this.uuid();
@@ -216,7 +217,7 @@ export class SessionService implements SessionServiceInterface {
     await Promise.all(sessionIds.map(sid => this.revoke(sid)));
   }
 
-  async updateSessionMetadata(sessionId: string, metadata: Record<string, any>): Promise<boolean> {
+  async updateSessionMetadata(sessionId: string, metadata: SessionMetadata): Promise<boolean> {
     const data = await this.storage.get(this.getSessionKey(sessionId));
     if (!data) return false;
     

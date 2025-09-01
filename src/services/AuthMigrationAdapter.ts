@@ -1,15 +1,23 @@
 import { SessionServiceInterface } from './SessionService';
 import { LoadDictElement, GetInstanceType } from 'di-why/build/src/DiContainer';
 import { ActionStatus } from '../generalTypes';
+import {
+  User,
+  AuthenticationResult,
+  TokenPayload,
+  AuthenticateParams,
+  AuthenticateTokenParams,
+  VerifyTokenParams,
+  GenerateTokenParams,
+  SessionMetadata
+} from '../types/auth.types';
 
 export interface TokenAuthResponse {
   status: ActionStatus;
   code?: string;
   message?: string;
-  user?: {
-    UUID: string;
-    [key: string]: any;
-  };
+  user?: User;
+  userInfo?: any;
   token?: string;
 }
 
@@ -25,29 +33,26 @@ export class SessionToJWTAdapter {
     token,
     IP,
     tokenConfig
-  }: {
-    token: string;
-    IP?: string;
-    tokenConfig?: any;
-  }): Promise<TokenAuthResponse> {
+  }: AuthenticateTokenParams): Promise<TokenAuthResponse> {
     // Check if it's actually a JWT or a session ID
     if (this.isJWT(token)) {
       // It's a JWT, use the JWT service if available
       if (this.jwtService?.authenticateTokenStrategy) {
         try {
-          const tokenUser = await this.jwtService.authenticateTokenStrategy({ token, tokenConfig: tokenConfig || {} });
+          const result = await this.jwtService.authenticateTokenStrategy({ token, tokenConfig: tokenConfig || {} });
+          const userInfo = result.userInfo || result.user;
           return {
             status: ActionStatus.success,
             user: {
-              UUID: tokenUser.userInfo.UUID,
-              ...tokenUser.userInfo,
+              UUID: userInfo?.UUID,
+              ...userInfo,
             },
           };
-        } catch (error: any) {
+        } catch (error) {
           return {
             status: ActionStatus.fail,
             code: 'INVALID_TOKEN',
-            message: error.message || 'Invalid token',
+            message: (error as Error).message || 'Invalid token',
           };
         }
       } else {
@@ -81,25 +86,14 @@ export class SessionToJWTAdapter {
   }
 
   // Generate a token that looks like JWT but is actually a session
-  async generateToken({
-    UUID,
-    ...metadata
-  }: {
-    UUID: string;
-    [key: string]: any;
-  }): Promise<string> {
-    const { sessionId } = await this.sessionService.create(UUID, metadata);
+  async generateToken(params: GenerateTokenParams): Promise<string> {
+    const { sessionId } = await this.sessionService.create(params.UUID, params as SessionMetadata);
     return sessionId;
   }
 
   // Verify token (session or JWT)
-  async verifyToken<P = any>({
-    token,
-    tokenConfig
-  }: {
-    token: string;
-    tokenConfig?: any;
-  }): Promise<P | false> {
+  async verifyToken(params: VerifyTokenParams): Promise<TokenPayload | false> {
+    const { token, tokenConfig } = params;
     if (this.isJWT(token)) {
       // Verify JWT
       if (this.jwtService) {
@@ -125,7 +119,7 @@ export class SessionToJWTAdapter {
       exp: Math.floor(Date.now() / 1000) + 7200, // 2 hours from now
       iat: Math.floor((session.createdAt || Date.now()) / 1000),
       ...session.metadata,
-    } as P;
+    };
   }
 
   // Convert JWT auth to session
@@ -192,25 +186,16 @@ export class SessionToJWTAdapter {
 
 // Interface for the auth service we're wrapping
 export interface AuthServiceInterface {
-  authenticate(params: any): Promise<LoginResult>;
-  authenticateTokenStrategy(params: { token: string; IP?: string }): Promise<any>;
+  authenticate(params: AuthenticateParams): Promise<AuthenticationResult>;
+  authenticateTokenStrategy(params: AuthenticateTokenParams): Promise<TokenAuthResponse>;
 }
 
 // Interface for JWT service
 export interface JWTServiceInterface {
-  verifyToken(params: { token: string; tokenConfig: any }): Promise<any>;
-  generateToken?(params: any): Promise<string>;
-  authenticateTokenStrategy?(params: { token: string; tokenConfig: any }): Promise<any>;
+  verifyToken(params: VerifyTokenParams): Promise<TokenPayload | false> | TokenPayload | false;
+  generateToken?(params: GenerateTokenParams): Promise<string> | string;
+  authenticateTokenStrategy?(params: AuthenticateTokenParams): Promise<TokenAuthResponse>;
   blacklistToken?(token: string): Promise<void>;
-}
-
-// Login result type
-export interface LoginResult {
-  status: string;
-  code?: string;
-  message?: string;
-  user?: any;
-  token?: string;
 }
 
 // Wrapper to make existing auth service work with sessions
@@ -230,7 +215,7 @@ export class AuthServiceAdapter {
   }
 
   // Wrap existing authenticate to return sessions instead of JWT
-  async authenticate(params: any): Promise<any> {
+  async authenticate(params: AuthenticateParams): Promise<AuthenticationResult> {
     console.log('[ADAPTER DEBUG] AuthServiceAdapter.authenticate called');
     console.log('[ADAPTER DEBUG] Has sessionService:', !!this.sessionService);
     console.log('[ADAPTER DEBUG] Has jwtService:', !!this.jwtService);
@@ -240,7 +225,7 @@ export class AuthServiceAdapter {
     console.log('[ADAPTER DEBUG] Original auth result status:', result.status);
     console.log('[ADAPTER DEBUG] Original auth result has token:', !!result.token);
     console.log('[ADAPTER DEBUG] Original auth result has user:', !!result.user);
-    console.log('[ADAPTER DEBUG] User object has token:', !!result.user?.token);
+    console.log('[ADAPTER DEBUG] User object has token:', !!(result.user && 'token' in result.user && result.user.token));
     console.log('[ADAPTER DEBUG] Full result keys:', Object.keys(result));
     if (result.user) {
       console.log('[ADAPTER DEBUG] User keys:', Object.keys(result.user));
@@ -288,14 +273,14 @@ export class AuthServiceAdapter {
   }
 
   // New method for session-based authentication
-  async authenticateWithSession(params: any): Promise<any> {
+  async authenticateWithSession(params: AuthenticateParams): Promise<AuthenticationResult> {
     // Use existing password validation
     const result = await this.authService.authenticate(params);
 
     if (result.status === ActionStatus.success) {
       // Create session instead of JWT
       const { sessionId, refreshId } = await this.sessionService.create(
-        result.user.UUID,
+        result.user!.UUID,
         { user: result.user }
       );
 
@@ -311,7 +296,7 @@ export class AuthServiceAdapter {
   }
 
   // Make auth service validate sessions as if they were tokens
-  async authenticateTokenStrategy(params: { token: string; IP?: string }): Promise<any> {
+  async authenticateTokenStrategy(params: AuthenticateTokenParams): Promise<TokenAuthResponse> {
     const { token } = params;
 
     // Check if it's a session ID or JWT
