@@ -6,6 +6,9 @@ const appConfigMap = function (env: {
   GRAPHQL_PLAYGROUND?: string;
   GRAPHQL_PUBLIC_PATH?: string;
   NODE_ENV?: string;
+  GRAPHQL_AUTH_MODE?: string;
+  SESSION_COOKIE_NAME?: string;
+  REFRESH_COOKIE_NAME?: string;
 }) {
   if (undefined === env.APPLICATION_NAME) {
     throw new Error('Missing .env var APPLICATION_NAME, ex: "My App" used as brand name in email verification');
@@ -30,6 +33,9 @@ const appConfigMap = function (env: {
     graphqlPlayground: !!env.GRAPHQL_PLAYGROUND,
     nodeEnv: env.NODE_ENV || 'development',
     serverPort: (env.APP_PORT !== undefined && parseInt(env.APP_PORT)) || 3500,
+    authMode: env.GRAPHQL_AUTH_MODE || 'cookie',
+    sessionCookieName: env.SESSION_COOKIE_NAME || 'sid',
+    refreshCookieName: env.REFRESH_COOKIE_NAME || 'rid',
   };
 }
 

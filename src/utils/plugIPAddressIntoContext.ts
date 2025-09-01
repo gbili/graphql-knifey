@@ -12,11 +12,16 @@ export type GraphqlRequestContainer<C extends GraphqlContext = GraphqlContext, H
   req: IncomingMessage;
 };
 
-async function plugIPAddressIntoContext<C extends GraphqlContext>({ req: { headers, socket }, context }: GraphqlRequestContainer<C>): Promise<AugmentedContext<C>> {
+export function extractIPOrUndefined({ req: { headers, socket }}: { req: IncomingMessage }) {
   const raw = headers?.['x-forwarded-for'] ?? socket?.remoteAddress ?? undefined;
   const IP = Array.isArray(raw) ? raw[0] : raw;
+  return IP;
+}
+
+export async function plugIPAddressIntoContext<C extends GraphqlContext>({ req, context }: GraphqlRequestContainer<C>): Promise<AugmentedContext<C>> {
+  const IP = extractIPOrUndefined({ req });
   return (
-    IP !== null
+    IP !== undefined
     ? {
       ...context,
       IP,
@@ -25,9 +30,15 @@ async function plugIPAddressIntoContext<C extends GraphqlContext>({ req: { heade
   );
 };
 
-export const extractTokenAndIPAddressFromRequestIntoContext = (me: typeof HeaderAuthTokenExtractor, context: GraphqlContext) => {
-  return async (requestContainer: GraphqlRequestContainer<GraphqlContext, { authorization?: string; }>) => {
-    const nextContext: GraphqlContext & { token?: string; } = await (me.getAsyncContextReqMethod(context))(requestContainer);
+export const extractTokenAndIPAddressFromRequestIntoContext = (
+  me: typeof HeaderAuthTokenExtractor,
+  sharedContext_DONT_MUTATE_WITH_PER_REQUEST_DATA: GraphqlContext
+) => {
+  return async (
+    requestContainer: GraphqlRequestContainer<GraphqlContext,
+    { authorization?: string; }>
+  ) => {
+    const nextContext: GraphqlContext & { token?: string; } = await (me.getAsyncContextReqMethod(sharedContext_DONT_MUTATE_WITH_PER_REQUEST_DATA))(requestContainer);
     return await plugIPAddressIntoContext({ ...requestContainer, context: nextContext });
   }
 };
