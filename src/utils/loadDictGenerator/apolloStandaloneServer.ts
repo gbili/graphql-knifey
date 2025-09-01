@@ -122,6 +122,15 @@ function loadDictElementGen(
 
       try {
         logger.log(`🚀 Starting Apollo (public graph w/ cookies) 🚀`);
+        logger.log(`[APOLLO DEBUG] Cookie configuration:`);
+        logger.log(`[APOLLO DEBUG] - Cookie secret: ${cookieSecret ? 'SET' : 'NOT SET'}`);
+        logger.log(`[APOLLO DEBUG] - Cookie domain: ${cookieDomain || 'NOT SET (will use current domain)'}`);
+        logger.log(`[APOLLO DEBUG] - Session cookie name: ${accessCookieName}`);
+        logger.log(`[APOLLO DEBUG] - Refresh cookie name: ${refreshCookieName}`);
+        logger.log(`[APOLLO DEBUG] - CORS credentials: ${corsCredentials}`);
+        logger.log(`[APOLLO DEBUG] - CORS origin: ${JSON.stringify(corsAllowedOrigin)}`);
+        logger.log(`[APOLLO DEBUG] - Environment: ${nodeEnv}`);
+        
         await server.start();
         logger.log(`🚀 Started Apollo 🚀`);
 
@@ -149,10 +158,19 @@ function loadDictElementGen(
           expressMiddleware(server, {
             // IMPORTANT: pass req & res to context so resolvers can set/clear cookies
             context: async ({ req, res }): Promise<PublicGraphContext> => {
+              console.log('[APOLLO DEBUG] Context creation started');
+              console.log('[APOLLO DEBUG] Cookie parser available:', !!(req as any).cookies);
+              console.log('[APOLLO DEBUG] Signed cookies available:', !!(req as any).signedCookies);
+              
               // Prefer signed cookies if cookieSecret is set
               const cookies = (req as any).signedCookies ?? req.cookies ?? {};
+              console.log('[APOLLO DEBUG] All cookies:', cookies);
+              console.log('[APOLLO DEBUG] Looking for cookies - access:', accessCookieName, 'refresh:', refreshCookieName);
+              
               const sessionId = cookies[accessCookieName] ?? null;
               const refreshId = cookies[refreshCookieName] ?? null;
+              console.log('[APOLLO DEBUG] Found sessionId:', !!sessionId);
+              console.log('[APOLLO DEBUG] Found refreshId:', !!refreshId);
 
               const { setAuthCookies, clearAuthCookies } = makeCookieHelpers(res, {
                 isProd,
@@ -160,11 +178,16 @@ function loadDictElementGen(
                 accessName: accessCookieName,
                 refreshName: refreshCookieName,
               });
+              console.log('[APOLLO DEBUG] Cookie helpers created');
+              console.log('[APOLLO DEBUG] Cookie domain:', cookieDomain);
+              console.log('[APOLLO DEBUG] Is production:', isProd);
 
               // Merge any additional context your DI provides
               const extra = typeof rawAppContext === 'function'
-                ? await rawAppContext({ req, res })
+                ? await rawAppContext({ req, res, sessionId, refreshId, setAuthCookies, clearAuthCookies })
                 : rawAppContext;
+              console.log('[APOLLO DEBUG] Extra context type:', typeof rawAppContext);
+              console.log('[APOLLO DEBUG] Extra context keys:', extra ? Object.keys(extra) : 'none');
 
               return {
                 req,

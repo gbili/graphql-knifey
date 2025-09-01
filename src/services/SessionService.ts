@@ -62,9 +62,15 @@ export class SessionService implements SessionServiceInterface {
   }
 
   async create(userId: string, metadata?: Record<string, any>): Promise<{ sessionId: string; refreshId: string }> {
+    console.log('[SESSION DEBUG] SessionService.create called for user:', userId);
     const sessionId = this.uuid();
     const refreshId = this.uuid();
     const now = Date.now();
+    
+    console.log('[SESSION DEBUG] Generated sessionId:', sessionId);
+    console.log('[SESSION DEBUG] Generated refreshId:', refreshId);
+    console.log('[SESSION DEBUG] Session TTL:', this.config.sessionTTL, 'seconds');
+    console.log('[SESSION DEBUG] Refresh TTL:', this.config.refreshTTL, 'seconds');
     
     const sessionData: SessionData = {
       userId,
@@ -81,15 +87,19 @@ export class SessionService implements SessionServiceInterface {
     };
     
     // Store session
+    const sessionKey = this.getSessionKey(sessionId);
+    console.log('[SESSION DEBUG] Storing session at key:', sessionKey);
     await this.storage.setex(
-      this.getSessionKey(sessionId),
+      sessionKey,
       this.config.sessionTTL,
       JSON.stringify(sessionData)
     );
     
     // Store refresh token
+    const refreshKey = this.getRefreshKey(refreshId);
+    console.log('[SESSION DEBUG] Storing refresh at key:', refreshKey);
     await this.storage.setex(
-      this.getRefreshKey(refreshId),
+      refreshKey,
       this.config.refreshTTL,
       JSON.stringify(refreshData)
     );
@@ -106,13 +116,25 @@ export class SessionService implements SessionServiceInterface {
   }
 
   async validate(sessionId: string): Promise<SessionData | null> {
-    if (!sessionId) return null;
+    console.log('[SESSION DEBUG] SessionService.validate called with sessionId:', sessionId);
+    if (!sessionId) {
+      console.log('[SESSION DEBUG] No sessionId provided, returning null');
+      return null;
+    }
     
-    const data = await this.storage.get(this.getSessionKey(sessionId));
-    if (!data) return null;
+    const sessionKey = this.getSessionKey(sessionId);
+    console.log('[SESSION DEBUG] Looking for session at key:', sessionKey);
+    const data = await this.storage.get(sessionKey);
     
+    if (!data) {
+      console.log('[SESSION DEBUG] No session data found for sessionId:', sessionId);
+      return null;
+    }
+    
+    console.log('[SESSION DEBUG] Session data found, parsing...');
     try {
       const sessionData = JSON.parse(data) as SessionData;
+      console.log('[SESSION DEBUG] Session valid for user:', sessionData.userId);
       
       // Update last accessed time
       sessionData.lastAccessedAt = Date.now();
@@ -121,10 +143,11 @@ export class SessionService implements SessionServiceInterface {
         this.config.sessionTTL,
         JSON.stringify(sessionData)
       );
+      console.log('[SESSION DEBUG] Session refreshed with new TTL');
       
       return sessionData;
     } catch (err) {
-      console.error('Failed to parse session data:', err);
+      console.error('[SESSION DEBUG] Failed to parse session data:', err);
       return null;
     }
   }
@@ -220,13 +243,12 @@ export class SessionService implements SessionServiceInterface {
 export const sessionServiceLDEGen = (config?: Partial<SessionConfig>): LoadDictElement<GetInstanceType<typeof SessionService>> => {
   const loadDictElement: LoadDictElement<GetInstanceType<typeof SessionService>> = {
     constructible: SessionService,
-    destructureDeps: true,
     locateDeps: {
       storage: 'redisClient', // or 'memoryStore'
       uuid: 'uuid',
     },
     before: async ({ deps }) => {
-      // Return an array for positional constructor arguments when destructureDeps is true
+      // Return an array for positional constructor arguments
       return [
         deps.storage,
         deps.uuid,
@@ -236,7 +258,8 @@ export const sessionServiceLDEGen = (config?: Partial<SessionConfig>): LoadDictE
           prefix: config?.prefix || '',
         }
       ];
-    }
+    },
+    destructureDeps: true  // Set after before hook so deps is an object in before
   };
   return loadDictElement;
 };

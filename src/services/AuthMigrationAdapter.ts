@@ -195,42 +195,81 @@ export class SessionToJWTAdapter {
 
 // Wrapper to make existing auth service work with sessions
 export class AuthServiceAdapter {
-  constructor(
-    private authService: any, // Your existing AuthService
-    private sessionService: SessionServiceInterface,
-    private jwtService?: any // Optional for hybrid mode
-  ) {}
+  private authService: any;
+  private sessionService: SessionServiceInterface;
+  private jwtService?: any;
+
+  constructor(deps: {
+    authService: any;
+    sessionService: SessionServiceInterface;
+    jwtService?: any;
+  }) {
+    this.authService = deps.authService;
+    this.sessionService = deps.sessionService;
+    this.jwtService = deps.jwtService;
+  }
 
   // Wrap existing authenticate to return sessions instead of JWT
   async authenticate(params: any): Promise<any> {
+    console.log('[ADAPTER DEBUG] AuthServiceAdapter.authenticate called');
+    console.log('[ADAPTER DEBUG] Has sessionService:', !!this.sessionService);
+    console.log('[ADAPTER DEBUG] Has jwtService:', !!this.jwtService);
+    
     // Call original authenticate
     const result = await this.authService.authenticate(params);
+    console.log('[ADAPTER DEBUG] Original auth result status:', result.status);
+    console.log('[ADAPTER DEBUG] Original auth result has token:', !!result.token);
+    console.log('[ADAPTER DEBUG] Original auth result has user:', !!result.user);
+    console.log('[ADAPTER DEBUG] User object has token:', !!result.user?.token);
+    console.log('[ADAPTER DEBUG] Full result keys:', Object.keys(result));
+    if (result.user) {
+      console.log('[ADAPTER DEBUG] User keys:', Object.keys(result.user));
+    }
 
-    if (result.status === ActionStatus.success && result.token) {
+    // Check for token in either location (result.token or result.user.token)
+    const token = result.token || result.user?.token;
+    
+    if (result.status === ActionStatus.success && token) {
+      console.log('[ADAPTER DEBUG] Auth successful, converting to session...');
+      console.log('[ADAPTER DEBUG] Token found at:', result.token ? 'result.token' : 'result.user.token');
       // Convert JWT to session
-      if (this.isJWT(result.token)) {
+      if (this.isJWT(token)) {
+        console.log('[ADAPTER DEBUG] Token is JWT, extracting user info...');
         // Extract user info from token
         const payload = await this.jwtService?.verifyToken({
-          token: result.token,
+          token: token,
           tokenConfig: {}
         });
+        console.log('[ADAPTER DEBUG] JWT payload extracted, has UUID:', !!payload?.UUID);
 
         if (payload && payload.UUID) {
+          console.log('[ADAPTER DEBUG] Creating session for user:', payload.UUID);
           // Create session
           const { sessionId, refreshId } = await this.sessionService.create(
             payload.UUID,
             { user: result.user, ...payload }
           );
+          console.log('[ADAPTER DEBUG] Session created!');
+          console.log('[ADAPTER DEBUG] SessionId:', sessionId);
+          console.log('[ADAPTER DEBUG] RefreshId:', refreshId);
 
           // Replace token with session info
-          return {
+          const finalResult = {
             ...result,
             sessionId,
             refreshId,
             token: undefined, // Remove JWT from response
           };
+          console.log('[ADAPTER DEBUG] Returning result with session IDs, no token');
+          return finalResult;
+        } else {
+          console.log('[ADAPTER DEBUG] Could not extract UUID from JWT payload');
         }
+      } else {
+        console.log('[ADAPTER DEBUG] Token is not a JWT, keeping as-is');
       }
+    } else {
+      console.log('[ADAPTER DEBUG] Auth failed or no token, returning original result');
     }
 
     return result;
@@ -297,27 +336,18 @@ export class AuthServiceAdapter {
 // Loader for DI
 export const sessionToJWTAdapterLDEGen = (): LoadDictElement<GetInstanceType<typeof SessionToJWTAdapter>> => ({
   constructible: SessionToJWTAdapter,
-  destructureDeps: true,
   locateDeps: {
     sessionService: 'sessionService',
     jwtService: 'tokenAuthService', // Optional
-  },
-  before: async ({ deps }) => {
-    // Return array for positional constructor arguments
-    return [deps.sessionService, deps.jwtService];
   }
 });
 
 export const authServiceAdapterLDEGen = (): LoadDictElement<GetInstanceType<typeof AuthServiceAdapter>> => ({
   constructible: AuthServiceAdapter,
-  destructureDeps: true,
   locateDeps: {
     authService: 'authService',
-    sessionService: 'sessionService',
+    sessionService: 'sessionService', 
     jwtService: 'tokenAuthService', // Optional
-  },
-  before: async ({ deps }) => {
-    // Return array for positional constructor arguments
-    return [deps.authService, deps.sessionService, deps.jwtService];
   }
+  // No destructureDeps or before hook - di-why will pass the deps object to constructor
 });

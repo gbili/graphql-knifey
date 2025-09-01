@@ -87,6 +87,16 @@ export async function createAuthContext(
     clearAuthCookies,
   } = params;
 
+  console.log('[CONTEXT DEBUG] createAuthContext called');
+  console.log('[CONTEXT DEBUG] Auth mode:', config.authMode);
+  console.log('[CONTEXT DEBUG] Has sessionService:', !!config.sessionService);
+  console.log('[CONTEXT DEBUG] Has authStrategy:', !!config.authStrategy);
+  console.log('[CONTEXT DEBUG] Has sessionAdapter:', !!config.sessionAdapter);
+  console.log('[CONTEXT DEBUG] Cookie names - session:', config.sessionCookieName, 'refresh:', config.refreshCookieName);
+  console.log('[CONTEXT DEBUG] Request cookies:', req.cookies);
+  console.log('[CONTEXT DEBUG] Has setAuthCookies:', !!setAuthCookies);
+  console.log('[CONTEXT DEBUG] Has clearAuthCookies:', !!clearAuthCookies);
+
   // Extract IP address
   const IP = extractIPOrUndefined({ req }) || '';
 
@@ -97,13 +107,21 @@ export async function createAuthContext(
 
   // Handle authentication based on mode
   if (config.authMode === 'cookie' || config.authMode === 'hybrid') {
+    console.log('[CONTEXT DEBUG] Attempting cookie-based auth');
     // Try cookie-based auth
     const sessionId = cookieSessionId || req.cookies?.[config.sessionCookieName] || null;
     const refreshId = cookieRefreshId || req.cookies?.[config.refreshCookieName] || null;
+    
+    console.log('[CONTEXT DEBUG] Session ID from params:', cookieSessionId);
+    console.log('[CONTEXT DEBUG] Session ID from cookie:', req.cookies?.[config.sessionCookieName]);
+    console.log('[CONTEXT DEBUG] Final sessionId:', sessionId);
+    console.log('[CONTEXT DEBUG] Final refreshId:', refreshId);
 
     if (sessionId && config.sessionService) {
+      console.log('[CONTEXT DEBUG] Validating session with sessionService');
       try {
         const sessionData = await config.sessionService.validate(sessionId);
+        console.log('[CONTEXT DEBUG] Session validation result:', sessionData ? 'Valid session' : 'Invalid/expired session');
         if (sessionData) {
           authContext = {
             authenticated: true,
@@ -113,22 +131,31 @@ export async function createAuthContext(
             refreshId,
             token: sessionId, // For backward compatibility
           };
+          console.log('[CONTEXT DEBUG] User authenticated via session:', sessionData.userId);
         }
       } catch (err) {
-        console.error('Session validation error:', err);
+        console.error('[CONTEXT DEBUG] Session validation error:', err);
       }
+    } else {
+      console.log('[CONTEXT DEBUG] No session to validate - sessionId:', !!sessionId, 'sessionService:', !!config.sessionService);
     }
 
     // Fall back to JWT in hybrid mode if no session
     if (config.authMode === 'hybrid' && !authContext.authenticated) {
+      console.log('[CONTEXT DEBUG] Session auth failed, trying JWT fallback');
       const authHeader = req.headers?.authorization;
       const token = typeof authHeader === 'string' && authHeader.startsWith('Bearer ')
         ? authHeader.substring(7)
         : authHeader;
+      
+      console.log('[CONTEXT DEBUG] Auth header present:', !!authHeader);
+      console.log('[CONTEXT DEBUG] Token extracted:', !!token);
 
       if (token && config.authStrategy) {
+        console.log('[CONTEXT DEBUG] Validating JWT token');
         try {
           const validation = await config.authStrategy.validate(token as string);
+          console.log('[CONTEXT DEBUG] JWT validation result:', validation.valid ? 'Valid' : 'Invalid');
           if (validation.valid) {
             authContext = {
               authenticated: true,
@@ -136,10 +163,13 @@ export async function createAuthContext(
               user: validation.user,
               token: token as string,
             };
+            console.log('[CONTEXT DEBUG] User authenticated via JWT:', validation.userId);
           }
         } catch (err) {
-          console.error('JWT validation error:', err);
+          console.error('[CONTEXT DEBUG] JWT validation error:', err);
         }
+      } else {
+        console.log('[CONTEXT DEBUG] No JWT to validate - token:', !!token, 'authStrategy:', !!config.authStrategy);
       }
     }
   } else if (config.authMode === 'jwt') {
@@ -165,6 +195,11 @@ export async function createAuthContext(
       }
     }
   }
+
+  console.log('[CONTEXT DEBUG] Final auth state - authenticated:', authContext.authenticated || false);
+  console.log('[CONTEXT DEBUG] Final auth state - userId:', authContext.userId);
+  console.log('[CONTEXT DEBUG] Final auth state - has sessionId:', !!authContext.sessionId);
+  console.log('[CONTEXT DEBUG] Final auth state - has token:', !!authContext.token);
 
   // Build final context with all services and auth state
   return {
