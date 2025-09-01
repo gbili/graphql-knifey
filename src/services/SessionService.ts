@@ -220,21 +220,22 @@ export class SessionService implements SessionServiceInterface {
 export const sessionServiceLDEGen = (config?: Partial<SessionConfig>): LoadDictElement<GetInstanceType<typeof SessionService>> => {
   const loadDictElement: LoadDictElement<GetInstanceType<typeof SessionService>> = {
     constructible: SessionService,
+    destructureDeps: true,
     locateDeps: {
       storage: 'redisClient', // or 'memoryStore'
       uuid: 'uuid',
     },
     before: async ({ deps }) => {
-      // Ensure the config is properly structured as the third parameter
-      return {
-        storage: deps.storage,
-        uuid: deps.uuid,
-        config: {
+      // Return an array for positional constructor arguments when destructureDeps is true
+      return [
+        deps.storage,
+        deps.uuid,
+        {
           sessionTTL: config?.sessionTTL || 7200,    // 2 hours default
           refreshTTL: config?.refreshTTL || 604800,  // 7 days default
           prefix: config?.prefix || '',
         }
-      };
+      ];
     }
   };
   return loadDictElement;

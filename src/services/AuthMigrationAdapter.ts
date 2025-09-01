@@ -297,17 +297,27 @@ export class AuthServiceAdapter {
 // Loader for DI
 export const sessionToJWTAdapterLDEGen = (): LoadDictElement<GetInstanceType<typeof SessionToJWTAdapter>> => ({
   constructible: SessionToJWTAdapter,
+  destructureDeps: true,
   locateDeps: {
     sessionService: 'sessionService',
     jwtService: 'tokenAuthService', // Optional
   },
+  before: async ({ deps }) => {
+    // Return array for positional constructor arguments
+    return [deps.sessionService, deps.jwtService];
+  }
 });
 
 export const authServiceAdapterLDEGen = (): LoadDictElement<GetInstanceType<typeof AuthServiceAdapter>> => ({
   constructible: AuthServiceAdapter,
+  destructureDeps: true,
   locateDeps: {
     authService: 'authService',
     sessionService: 'sessionService',
     jwtService: 'tokenAuthService', // Optional
   },
+  before: async ({ deps }) => {
+    // Return array for positional constructor arguments
+    return [deps.authService, deps.sessionService, deps.jwtService];
+  }
 });

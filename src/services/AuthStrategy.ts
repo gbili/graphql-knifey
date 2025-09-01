@@ -250,27 +250,39 @@ export class HybridAuthStrategy implements AuthStrategy {
 // Loader generators for DI
 export const cookieStrategyLDEGen = (): LoadDictElement<GetInstanceType<typeof CookieSessionStrategy>> => ({
   constructible: CookieSessionStrategy,
+  destructureDeps: true,
   locateDeps: {
     sessionService: 'sessionService',
     userValidator: 'authService', // Assumes authService has a validate method
   },
+  before: async ({ deps }) => {
+    // Return array for positional constructor arguments
+    return [deps.sessionService, deps.userValidator];
+  }
 });
 
 export const jwtStrategyLDEGen = (): LoadDictElement<GetInstanceType<typeof JWTStrategy>> => ({
   constructible: JWTStrategy,
+  destructureDeps: true,
   locateDeps: {
     tokenAuthService: 'tokenAuthService',
     userValidator: 'authService',
   },
+  before: async ({ deps }) => {
+    // Return array for positional constructor arguments
+    return [deps.tokenAuthService, deps.userValidator];
+  }
 });
 
 export const hybridStrategyLDEGen = (preferCookies: boolean = true): LoadDictElement<GetInstanceType<typeof HybridAuthStrategy>> => ({
   constructible: HybridAuthStrategy,
-  deps: {
-    preferCookies,
-  },
+  destructureDeps: true,
   locateDeps: {
     cookieStrategy: 'cookieStrategy',
     jwtStrategy: 'jwtStrategy',
   },
+  before: async ({ deps }) => {
+    // Return array for positional constructor arguments
+    return [deps.cookieStrategy, deps.jwtStrategy, preferCookies];
+  }
 });
