@@ -1,12 +1,6 @@
 import { SessionServiceInterface } from './SessionService';
 import { LoadDictElement, GetInstanceType } from 'di-why/build/src/DiContainer';
-
-// Status values that match existing code expectations
-export enum ActionStatus {
-  success = 'success',
-  fail = 'fail',
-  error = 'error',
-}
+import { ActionStatus } from '../generalTypes';
 
 export interface TokenAuthResponse {
   status: ActionStatus;
@@ -23,7 +17,7 @@ export interface TokenAuthResponse {
 export class SessionToJWTAdapter {
   constructor(
     private sessionService: SessionServiceInterface,
-    private jwtService?: any // jwt-authorized service (optional for migration)
+    private jwtService?: JWTServiceInterface
   ) {}
 
   // Make session look like a JWT for existing code
@@ -39,7 +33,7 @@ export class SessionToJWTAdapter {
     // Check if it's actually a JWT or a session ID
     if (this.isJWT(token)) {
       // It's a JWT, use the JWT service if available
-      if (this.jwtService) {
+      if (this.jwtService?.authenticateTokenStrategy) {
         try {
           const tokenUser = await this.jwtService.authenticateTokenStrategy({ token, tokenConfig: tokenConfig || {} });
           return {
@@ -163,15 +157,18 @@ export class SessionToJWTAdapter {
       return null;
     }
 
-    try {
-      return await this.jwtService.generateToken({
-        UUID: session.userId,
-        ...session.metadata,
-      });
-    } catch (error) {
-      console.error('Failed to convert session to JWT:', error);
-      return null;
+    if (this.jwtService?.generateToken) {
+      try {
+        return await this.jwtService.generateToken({
+          UUID: session.userId,
+          ...session.metadata,
+        });
+      } catch (error) {
+        console.error('Failed to convert session to JWT:', error);
+        return null;
+      }
     }
+    return null;
   }
 
   // Blacklist/revoke token
@@ -193,16 +190,39 @@ export class SessionToJWTAdapter {
   }
 }
 
+// Interface for the auth service we're wrapping
+export interface AuthServiceInterface {
+  authenticate(params: any): Promise<LoginResult>;
+  authenticateTokenStrategy(params: { token: string; IP?: string }): Promise<any>;
+}
+
+// Interface for JWT service
+export interface JWTServiceInterface {
+  verifyToken(params: { token: string; tokenConfig: any }): Promise<any>;
+  generateToken?(params: any): Promise<string>;
+  authenticateTokenStrategy?(params: { token: string; tokenConfig: any }): Promise<any>;
+  blacklistToken?(token: string): Promise<void>;
+}
+
+// Login result type
+export interface LoginResult {
+  status: string;
+  code?: string;
+  message?: string;
+  user?: any;
+  token?: string;
+}
+
 // Wrapper to make existing auth service work with sessions
 export class AuthServiceAdapter {
-  private authService: any;
+  private authService: AuthServiceInterface;
   private sessionService: SessionServiceInterface;
-  private jwtService?: any;
+  private jwtService?: JWTServiceInterface;
 
   constructor(deps: {
-    authService: any;
+    authService: AuthServiceInterface;
     sessionService: SessionServiceInterface;
-    jwtService?: any;
+    jwtService?: JWTServiceInterface;
   }) {
     this.authService = deps.authService;
     this.sessionService = deps.sessionService;
@@ -226,47 +246,39 @@ export class AuthServiceAdapter {
       console.log('[ADAPTER DEBUG] User keys:', Object.keys(result.user));
     }
 
-    // Check for token in either location (result.token or result.user.token)
-    const token = result.token || result.user?.token;
     
-    if (result.status === ActionStatus.success && token) {
+    // Handle both enum values and string values for compatibility
+    const isSuccess = result.status === ActionStatus.success;
+
+    if (isSuccess && result.user) {
       console.log('[ADAPTER DEBUG] Auth successful, converting to session...');
-      console.log('[ADAPTER DEBUG] Token found at:', result.token ? 'result.token' : 'result.user.token');
-      // Convert JWT to session
-      if (this.isJWT(token)) {
-        console.log('[ADAPTER DEBUG] Token is JWT, extracting user info...');
-        // Extract user info from token
-        const payload = await this.jwtService?.verifyToken({
-          token: token,
-          tokenConfig: {}
-        });
-        console.log('[ADAPTER DEBUG] JWT payload extracted, has UUID:', !!payload?.UUID);
+      console.log('[ADAPTER DEBUG] User UUID:', result.user.UUID);
+      
+      // We already have all the user data, no need to decode the JWT
+      const { UUID } = result.user;
+      
+      if (UUID) {
+        console.log('[ADAPTER DEBUG] Creating session for user:', UUID);
+        // Create session with the user data we already have
+        const { sessionId, refreshId } = await this.sessionService.create(
+          UUID,
+          { user: result.user }
+        );
+        console.log('[ADAPTER DEBUG] Session created!');
+        console.log('[ADAPTER DEBUG] SessionId:', sessionId);
+        console.log('[ADAPTER DEBUG] RefreshId:', refreshId);
 
-        if (payload && payload.UUID) {
-          console.log('[ADAPTER DEBUG] Creating session for user:', payload.UUID);
-          // Create session
-          const { sessionId, refreshId } = await this.sessionService.create(
-            payload.UUID,
-            { user: result.user, ...payload }
-          );
-          console.log('[ADAPTER DEBUG] Session created!');
-          console.log('[ADAPTER DEBUG] SessionId:', sessionId);
-          console.log('[ADAPTER DEBUG] RefreshId:', refreshId);
-
-          // Replace token with session info
-          const finalResult = {
-            ...result,
-            sessionId,
-            refreshId,
-            token: undefined, // Remove JWT from response
-          };
-          console.log('[ADAPTER DEBUG] Returning result with session IDs, no token');
-          return finalResult;
-        } else {
-          console.log('[ADAPTER DEBUG] Could not extract UUID from JWT payload');
-        }
+        // Replace token with session info
+        const finalResult = {
+          ...result,
+          sessionId,
+          refreshId,
+          token: undefined, // Remove JWT from response
+        };
+        console.log('[ADAPTER DEBUG] Returning result with session IDs, no token');
+        return finalResult;
       } else {
-        console.log('[ADAPTER DEBUG] Token is not a JWT, keeping as-is');
+        console.log('[ADAPTER DEBUG] No UUID found in user object');
       }
     } else {
       console.log('[ADAPTER DEBUG] Auth failed or no token, returning original result');

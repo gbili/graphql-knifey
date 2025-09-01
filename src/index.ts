@@ -28,8 +28,7 @@ import {
   SessionToJWTAdapter,
   AuthServiceAdapter,
   sessionToJWTAdapterLDEGen,
-  authServiceAdapterLDEGen,
-  ActionStatus
+  authServiceAdapterLDEGen
 } from "./services/AuthMigrationAdapter";
 import {
   apolloContextWithAuthLDEGen,
@@ -86,7 +85,6 @@ export {
   AuthServiceAdapter,
   sessionToJWTAdapterLDEGen,
   authServiceAdapterLDEGen,
-  ActionStatus as AuthActionStatus,
 
   // Enhanced Apollo Context
   apolloContextWithAuthLDEGen,

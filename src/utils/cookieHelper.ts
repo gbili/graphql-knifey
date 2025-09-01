@@ -39,6 +39,7 @@ export function makeCookieHelpers(
       console.log('[COOKIE DEBUG] Setting session cookie:', accessName, 'with options:', sessionOptions);
       res.cookie(accessName, sessionId, sessionOptions);
       console.log('[COOKIE DEBUG] Session cookie set');
+      console.log('[COOKIE DEBUG] Response headers after setting:', res.getHeaders());
     }
     if (refreshId != null) {
       // typically longer-lived than session

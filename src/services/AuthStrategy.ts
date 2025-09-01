@@ -1,5 +1,6 @@
 import { SessionServiceInterface } from './SessionService';
 import { LoadDictElement, GetInstanceType } from 'di-why/build/src/DiContainer';
+import { ActionStatus } from '../generalTypes';
 
 export interface AuthResult {
   success: boolean;
@@ -53,7 +54,7 @@ export class CookieSessionStrategy implements AuthStrategy {
       if (!validationResult) {
         return {
           success: false,
-          status: 'fail',
+          status: ActionStatus.fail,
           code: 'INVALID_CREDENTIALS',
           message: 'Invalid credentials provided',
         };
@@ -66,7 +67,7 @@ export class CookieSessionStrategy implements AuthStrategy {
 
       return {
         success: true,
-        status: 'success',
+        status: ActionStatus.success,
         code: 'LOGIN_SUCCESS',
         message: 'Authentication successful',
         userId: validationResult.userId,
@@ -78,7 +79,7 @@ export class CookieSessionStrategy implements AuthStrategy {
       console.error('Authentication error:', error);
       return {
         success: false,
-        status: 'error',
+        status: ActionStatus.fail,
         code: 'AUTH_ERROR',
         message: 'Authentication failed',
       };
@@ -111,7 +112,7 @@ export class CookieSessionStrategy implements AuthStrategy {
     if (!result) {
       return {
         success: false,
-        status: 'fail',
+        status: ActionStatus.fail,
         code: 'INVALID_REFRESH_TOKEN',
         message: 'Invalid or expired refresh token',
       };
@@ -119,7 +120,7 @@ export class CookieSessionStrategy implements AuthStrategy {
 
     return {
       success: true,
-      status: 'success',
+      status: ActionStatus.success,
       code: 'REFRESH_SUCCESS',
       message: 'Session refreshed successfully',
       sessionId: result.sessionId,
@@ -142,7 +143,7 @@ export class JWTStrategy implements AuthStrategy {
       if (!validationResult) {
         return {
           success: false,
-          status: 'fail',
+          status: ActionStatus.fail,
           code: 'INVALID_CREDENTIALS',
           message: 'Invalid credentials provided',
         };
@@ -156,7 +157,7 @@ export class JWTStrategy implements AuthStrategy {
 
       return {
         success: true,
-        status: 'success',
+        status: ActionStatus.success,
         code: 'LOGIN_SUCCESS',
         message: 'Authentication successful',
         userId: validationResult.userId,
@@ -167,7 +168,7 @@ export class JWTStrategy implements AuthStrategy {
       console.error('JWT authentication error:', error);
       return {
         success: false,
-        status: 'error',
+        status: ActionStatus.fail,
         code: 'AUTH_ERROR',
         message: 'Authentication failed',
       };
