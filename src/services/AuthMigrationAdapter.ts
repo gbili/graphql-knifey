@@ -332,7 +332,12 @@ export class AuthServiceAdapter {
 
 // Loader for DI
 export const sessionToJWTAdapterLDEGen = (): LoadDictElement<GetInstanceType<typeof SessionToJWTAdapter>> => ({
-  constructible: SessionToJWTAdapter,
+  factory: ({ deps }) => {
+    return new SessionToJWTAdapter(
+      deps.sessionService,
+      deps.jwtService
+    );
+  },
   locateDeps: {
     sessionService: 'sessionService',
     jwtService: 'tokenAuthService', // Optional
@@ -340,11 +345,16 @@ export const sessionToJWTAdapterLDEGen = (): LoadDictElement<GetInstanceType<typ
 });
 
 export const authServiceAdapterLDEGen = (): LoadDictElement<GetInstanceType<typeof AuthServiceAdapter>> => ({
-  constructible: AuthServiceAdapter,
+  factory: ({ deps }) => {
+    return new AuthServiceAdapter({
+      authService: deps.authService,
+      sessionService: deps.sessionService,
+      jwtService: deps.jwtService
+    });
+  },
   locateDeps: {
     authService: 'authService',
     sessionService: 'sessionService', 
     jwtService: 'tokenAuthService', // Optional
   }
-  // No destructureDeps or before hook - di-why will pass the deps object to constructor
 });

@@ -243,14 +243,8 @@ export class SessionService implements SessionServiceInterface {
 // Loader for DI
 export const sessionServiceLDEGen = (config?: Partial<SessionConfig>): LoadDictElement<GetInstanceType<typeof SessionService>> => {
   const loadDictElement: LoadDictElement<GetInstanceType<typeof SessionService>> = {
-    constructible: SessionService,
-    locateDeps: {
-      storage: 'redisClient', // or 'memoryStore'
-      uuid: 'uuid',
-    },
-    before: async ({ deps }) => {
-      // Return an array for positional constructor arguments
-      return [
+    factory: ({ deps }) => {
+      return new SessionService(
         deps.storage,
         deps.uuid,
         {
@@ -258,9 +252,12 @@ export const sessionServiceLDEGen = (config?: Partial<SessionConfig>): LoadDictE
           refreshTTL: config?.refreshTTL || 604800,  // 7 days default
           prefix: config?.prefix || '',
         }
-      ];
+      );
     },
-    destructureDeps: true  // Set after before hook so deps is an object in before
+    locateDeps: {
+      storage: 'redisClient', // or 'memoryStore'
+      uuid: 'uuid',
+    }
   };
   return loadDictElement;
 };
