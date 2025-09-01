@@ -1,5 +1,6 @@
 import ctx from "./utils/loadDictGenerator/apolloContext";
-import srv from "./utils/loadDictGenerator/apolloServer";
+import subgraphServerLoaderGen from "./utils/loadDictGenerator/apolloSubgraphServer";
+import standaloneServerLoaderGen from "./utils/loadDictGenerator/apolloStandaloneServer";
 import cfg from "./utils/loadDictGenerator/appConfig";
 import deDoub from "./utils/deDoubleEscape";
 import lschem from "./utils/loadSchema";
@@ -11,7 +12,8 @@ import appConfigMap from "./config/appConfig";
 import { apolloDepsDict } from "./utils/loadDictGenerator/apolloDepsDict";
 
 export const apolloContextLDEGen = ctx;
-export const apolloServerLDEGen = srv;
+export const apolloSubgraphServerLDEGen = subgraphServerLoaderGen;
+export const apolloStandaloneServerLDEGen = standaloneServerLoaderGen;
 
 export const apolloServerDepsLoadDict = apolloDepsDict;
 
