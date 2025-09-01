@@ -261,7 +261,7 @@ export class HybridAuthStrategy implements AuthStrategy {
 
 // Loader generators for DI
 export const cookieStrategyLDEGen = (): LoadDictElement<GetInstanceType<typeof CookieSessionStrategy>> => ({
-  factory: ({ deps }) => {
+  factory: (deps: any) => {
     return new CookieSessionStrategy(
       deps.sessionService,
       deps.userValidator
@@ -274,7 +274,7 @@ export const cookieStrategyLDEGen = (): LoadDictElement<GetInstanceType<typeof C
 });
 
 export const jwtStrategyLDEGen = (): LoadDictElement<GetInstanceType<typeof JWTStrategy>> => ({
-  factory: ({ deps }) => {
+  factory: (deps: any) => {
     return new JWTStrategy(
       deps.tokenAuthService,
       deps.userValidator
@@ -287,7 +287,7 @@ export const jwtStrategyLDEGen = (): LoadDictElement<GetInstanceType<typeof JWTS
 });
 
 export const hybridStrategyLDEGen = (preferCookies: boolean = true): LoadDictElement<GetInstanceType<typeof HybridAuthStrategy>> => ({
-  factory: ({ deps }) => {
+  factory: (deps: any) => {
     return new HybridAuthStrategy(
       deps.cookieStrategy,
       deps.jwtStrategy,

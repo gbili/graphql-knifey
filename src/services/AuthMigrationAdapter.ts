@@ -332,7 +332,7 @@ export class AuthServiceAdapter {
 
 // Loader for DI
 export const sessionToJWTAdapterLDEGen = (): LoadDictElement<GetInstanceType<typeof SessionToJWTAdapter>> => ({
-  factory: ({ deps }) => {
+  factory: (deps: any) => {
     return new SessionToJWTAdapter(
       deps.sessionService,
       deps.jwtService
@@ -345,7 +345,7 @@ export const sessionToJWTAdapterLDEGen = (): LoadDictElement<GetInstanceType<typ
 });
 
 export const authServiceAdapterLDEGen = (): LoadDictElement<GetInstanceType<typeof AuthServiceAdapter>> => ({
-  factory: ({ deps }) => {
+  factory: (deps: any) => {
     return new AuthServiceAdapter({
       authService: deps.authService,
       sessionService: deps.sessionService,

@@ -243,7 +243,7 @@ export class SessionService implements SessionServiceInterface {
 // Loader for DI
 export const sessionServiceLDEGen = (config?: Partial<SessionConfig>): LoadDictElement<GetInstanceType<typeof SessionService>> => {
   const loadDictElement: LoadDictElement<GetInstanceType<typeof SessionService>> = {
-    factory: ({ deps }) => {
+    factory: (deps: any) => {
       return new SessionService(
         deps.storage,
         deps.uuid,
