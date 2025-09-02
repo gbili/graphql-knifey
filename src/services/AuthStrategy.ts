@@ -212,52 +212,7 @@ export class JWTStrategy implements AuthStrategy {
   }
 }
 
-// Hybrid strategy that supports both cookies and JWT
-export class HybridAuthStrategy implements AuthStrategy {
-  constructor(
-    private cookieStrategy: CookieSessionStrategy,
-    private jwtStrategy: JWTStrategy,
-    private preferCookies: boolean = true
-  ) {}
-
-  async authenticate(credentials: AuthCredentials): Promise<AuthResult> {
-    if (this.preferCookies) {
-      const cookieResult = await this.cookieStrategy.authenticate(credentials);
-      // Also generate JWT for backward compatibility
-      if (cookieResult.success && cookieResult.userId) {
-        const jwtResult = await this.jwtStrategy.authenticate(credentials);
-        return {
-          ...cookieResult,
-          token: jwtResult.token,
-        };
-      }
-      return cookieResult;
-    } else {
-      return this.jwtStrategy.authenticate(credentials);
-    }
-  }
-
-  async validate(tokenOrSessionId: string): Promise<ValidationResult> {
-    // Check if it's a JWT (contains dots) or session ID
-    if (tokenOrSessionId.includes('.')) {
-      return this.jwtStrategy.validate(tokenOrSessionId);
-    } else {
-      return this.cookieStrategy.validate(tokenOrSessionId);
-    }
-  }
-
-  async revoke(tokenOrSessionId: string): Promise<void> {
-    if (tokenOrSessionId.includes('.')) {
-      await this.jwtStrategy.revoke(tokenOrSessionId);
-    } else {
-      await this.cookieStrategy.revoke(tokenOrSessionId);
-    }
-  }
-
-  async refresh(refreshToken: string): Promise<AuthResult> {
-    return this.cookieStrategy.refresh(refreshToken);
-  }
-}
+// Removed HybridAuthStrategy - now only pure cookie or JWT modes are supported
 
 // Loader generators for DI
 export const cookieStrategyLDEGen = (): LoadDictElement<GetInstanceType<typeof CookieSessionStrategy>> => ({
@@ -286,16 +241,4 @@ export const jwtStrategyLDEGen = (): LoadDictElement<GetInstanceType<typeof JWTS
   }
 });
 
-export const hybridStrategyLDEGen = (preferCookies: boolean = true): LoadDictElement<GetInstanceType<typeof HybridAuthStrategy>> => ({
-  factory: (deps: any) => {
-    return new HybridAuthStrategy(
-      deps.cookieStrategy,
-      deps.jwtStrategy,
-      preferCookies
-    );
-  },
-  locateDeps: {
-    cookieStrategy: 'cookieStrategy',
-    jwtStrategy: 'jwtStrategy',
-  }
-});
+// Removed hybridStrategyLDEGen - no longer supporting hybrid mode
