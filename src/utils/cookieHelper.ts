@@ -12,8 +12,8 @@ export function makeCookieHelpers(
 ) {
   const base = {
     httpOnly: true,
-    sameSite: isProd ? 'none' as const : ('lax' as const), // 'none' for cross-site in prod
-    secure: isProd,                                        // Chrome requires Secure when SameSite=None
+    sameSite: 'none' as const,                            // 'none' for cross-origin requests
+    secure: true,                                          // Required when SameSite=None
     path: '/',
     domain,                                                // can be undefined in dev
   };
