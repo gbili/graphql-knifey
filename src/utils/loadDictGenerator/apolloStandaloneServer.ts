@@ -141,7 +141,7 @@ function loadDictElementGen(
         app.use(
           graphqlPath,
           cors({
-            origin: corsAllowedOrigin as any,
+            origin: corsAllowedOrigin,
             credentials: Boolean(corsCredentials),
             methods: ['GET', 'POST', 'OPTIONS'],
             allowedHeaders: [
@@ -149,6 +149,7 @@ function loadDictElementGen(
               'Authorization',
               'Apollo-Require-Preflight',
               'X-Requested-With',
+              'X-CSRF-Token',  // Allow CSRF token header
             ],
             maxAge: 86400,
           }),
@@ -159,11 +160,41 @@ function loadDictElementGen(
             // IMPORTANT: pass req & res to context so resolvers can set/clear cookies
             context: async ({ req, res }): Promise<PublicGraphContext> => {
               console.log('[APOLLO DEBUG] Context creation started');
-              console.log('[APOLLO DEBUG] Cookie parser available:', !!(req as any).cookies);
-              console.log('[APOLLO DEBUG] Signed cookies available:', !!(req as any).signedCookies);
+              
+              console.log('[APOLLO DEBUG] Cookie parser available:', !!req.cookies);
+              console.log('[APOLLO DEBUG] Signed cookies available:', !!req.signedCookies);
+              
+              // CSRF Protection for mutations (double-submit cookie pattern)
+              const requestBody = req.body;
+              const isMutation = requestBody?.query?.includes('mutation');
+              
+              if (isMutation) {
+                console.log('[CSRF DEBUG] Mutation detected, checking CSRF token');
+                const csrfCookie = req.cookies?.['csrf-token'];
+                const csrfHeader = req.headers['x-csrf-token'];
+                
+                console.log('[CSRF DEBUG] CSRF cookie present:', !!csrfCookie);
+                console.log('[CSRF DEBUG] CSRF header present:', !!csrfHeader);
+                console.log('[CSRF DEBUG] CSRF values match:', csrfCookie === csrfHeader);
+                
+                // Only enforce CSRF if we're using cookie-based auth
+                const cookies = req.signedCookies ?? req.cookies ?? {};
+                const hasAuthCookie = !!(cookies[accessCookieName] || cookies[refreshCookieName]);
+                
+                if (hasAuthCookie) {
+                  console.log('[CSRF DEBUG] Auth cookies present, enforcing CSRF protection');
+                  if (!csrfCookie || !csrfHeader || csrfCookie !== csrfHeader) {
+                    console.error('[CSRF DEBUG] CSRF validation failed!');
+                    throw new Error('CSRF token validation failed');
+                  }
+                  console.log('[CSRF DEBUG] CSRF validation passed');
+                } else {
+                  console.log('[CSRF DEBUG] No auth cookies, skipping CSRF check (JWT auth)');
+                }
+              }
               
               // Prefer signed cookies if cookieSecret is set
-              const cookies = (req as any).signedCookies ?? req.cookies ?? {};
+              const cookies = req.signedCookies ?? req.cookies ?? {};
               console.log('[APOLLO DEBUG] All cookies:', cookies);
               console.log('[APOLLO DEBUG] Looking for cookies - access:', accessCookieName, 'refresh:', refreshCookieName);
               
