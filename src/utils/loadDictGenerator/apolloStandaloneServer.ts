@@ -130,7 +130,7 @@ function loadDictElementGen(
         logger.log(`[APOLLO DEBUG] - CORS credentials: ${corsCredentials}`);
         logger.log(`[APOLLO DEBUG] - CORS origin: ${JSON.stringify(corsAllowedOrigin)}`);
         logger.log(`[APOLLO DEBUG] - Environment: ${nodeEnv}`);
-        
+
         await server.start();
         logger.log(`🚀 Started Apollo 🚀`);
 
@@ -160,27 +160,27 @@ function loadDictElementGen(
             // IMPORTANT: pass req & res to context so resolvers can set/clear cookies
             context: async ({ req, res }): Promise<PublicGraphContext> => {
               console.log('[APOLLO DEBUG] Context creation started');
-              
+
               console.log('[APOLLO DEBUG] Cookie parser available:', !!req.cookies);
               console.log('[APOLLO DEBUG] Signed cookies available:', !!req.signedCookies);
-              
+
               // CSRF Protection for mutations (double-submit cookie pattern)
               const requestBody = req.body;
               const isMutation = requestBody?.query?.includes('mutation');
-              
+
               if (isMutation) {
                 console.log('[CSRF DEBUG] Mutation detected, checking CSRF token');
                 const csrfCookie = req.cookies?.['csrf-token'];
                 const csrfHeader = req.headers['x-csrf-token'];
-                
+
                 console.log('[CSRF DEBUG] CSRF cookie present:', !!csrfCookie);
                 console.log('[CSRF DEBUG] CSRF header present:', !!csrfHeader);
                 console.log('[CSRF DEBUG] CSRF values match:', csrfCookie === csrfHeader);
-                
+
                 // Only enforce CSRF if we're using cookie-based auth
                 const cookies = req.signedCookies ?? req.cookies ?? {};
                 const hasAuthCookie = !!(cookies[accessCookieName] || cookies[refreshCookieName]);
-                
+
                 if (hasAuthCookie) {
                   console.log('[CSRF DEBUG] Auth cookies present, enforcing CSRF protection');
                   if (!csrfCookie || !csrfHeader || csrfCookie !== csrfHeader) {
@@ -192,12 +192,12 @@ function loadDictElementGen(
                   console.log('[CSRF DEBUG] No auth cookies, skipping CSRF check (JWT auth)');
                 }
               }
-              
+
               // Prefer signed cookies if cookieSecret is set
               const cookies = req.signedCookies ?? req.cookies ?? {};
               console.log('[APOLLO DEBUG] All cookies:', cookies);
               console.log('[APOLLO DEBUG] Looking for cookies - access:', accessCookieName, 'refresh:', refreshCookieName);
-              
+
               const sessionId = cookies[accessCookieName] ?? null;
               const refreshId = cookies[refreshCookieName] ?? null;
               console.log('[APOLLO DEBUG] Found sessionId:', !!sessionId);
