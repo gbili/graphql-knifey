@@ -1,7 +1,7 @@
 import ctx from "./utils/loadDictGenerator/apolloContext";
 import subgraphServerLoaderGen from "./utils/loadDictGenerator/apolloSubgraphServer";
 import standaloneServerLoaderGen from "./utils/loadDictGenerator/apolloStandaloneServer";
-import standaloneServerModularLoaderGen from "./utils/loadDictGenerator/apolloStandaloneServerModular";
+import standaloneServerModularLoadDictGen from "./utils/loadDictGenerator/apolloStandaloneServerModular";
 import cfg from "./utils/loadDictGenerator/appConfig";
 import deDoub from "./utils/deDoubleEscape";
 import lschem from "./utils/loadSchema";
@@ -10,6 +10,18 @@ import { authenticateRequestAndPlugUserInInput as authenticateHelper } from "./u
 import { getFailOutcomeFromError as getFOFE } from "./utils/getFailOutcomeFromError";
 import { mergeAppConfigMaps as acmMerger } from "./utils/mergeAppConfigMaps";
 import appConfigMap from "./config/appConfig";
+import { 
+  prefixHandle, 
+  prefixBoth, 
+  prefixValue, 
+  retunDepsInjectDecustomizedHandle 
+} from "./utils/prefixHandle";
+import { 
+  customizableLoaderHandles,
+  type CustomizableLoaderHandles,
+  type CustomizableLoaderHandlesKeys,
+  type PrefixedHandles
+} from "./utils/loadDictGenerator/customizableLoaderHandles";
 
 // New auth-related imports
 import sessionServiceLDEGen, { SessionService, SessionServiceInterface, SessionData } from "./services/SessionService";
@@ -43,7 +55,14 @@ import {
 export const apolloContextLDEGen = ctx;
 export const apolloSubgraphServerLDEGen = subgraphServerLoaderGen;
 export const apolloStandaloneServerLDEGen = standaloneServerLoaderGen;
-export const apolloStandaloneServerModularLDEGen = standaloneServerModularLoaderGen;
+export const apolloStandaloneServerModularLDGen = standaloneServerModularLoadDictGen;
+
+// Export Apollo modular types
+export type { 
+  ApolloServerConfigParams,
+  LocatorHandles as ApolloLocatorHandles,
+  Resolvers as ApolloResolvers,
+} from './utils/loadDictGenerator/apolloStandaloneServerModular';
 
 export const appConfigLDEGen = cfg;
 
@@ -57,6 +76,18 @@ export const deDoubleEscape = deDoub;
 export const loadSchema = lschem;
 
 export const diContainer = di;
+
+// Export prefix utilities and types
+export {
+  prefixHandle,
+  prefixBoth,
+  prefixValue,
+  retunDepsInjectDecustomizedHandle,
+  customizableLoaderHandles,
+  type CustomizableLoaderHandles,
+  type CustomizableLoaderHandlesKeys,
+  type PrefixedHandles,
+};
 
 // Export new auth-related functionality
 export {

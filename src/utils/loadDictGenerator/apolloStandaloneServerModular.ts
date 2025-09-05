@@ -1,8 +1,8 @@
 import 'dotenv/config';
 import { LoadDict } from 'di-why/build/src/DiContainer';
-import type { Application } from '../../loaders/app';
 import gql from 'graphql-tag';
 import { prefixHandle } from '../prefixHandle';
+import { CustomizableLoaderHandles, customizableLoaderHandles } from './customizableLoaderHandles';
 
 // --- Types ----------------------------------------------------------
 
@@ -27,11 +27,7 @@ export type ApolloServerConfigParams = {
   apolloMiddlewaresList?: string[];
 };
 
-export type LocatorHandles = { 
-  appConfig: string; 
-  apolloContext: string; 
-  logger: string; 
-};
+export type LocatorHandles = CustomizableLoaderHandles;
 
 // --- Loader ---------------------------------------------------------
 
@@ -39,29 +35,20 @@ export type LocatorHandles = {
  * Modern modular Apollo server loader that leverages individual middleware loaders
  * This replaces the monolithic apolloStandaloneServer approach
  */
-function loadDictElementGen(
+function loadDictGen(
   resolvers: Resolvers<any>,
   typeDefs: ReturnType<typeof gql>,
-  loaderHandles: LocatorHandles = {
-    appConfig: 'appConfig',
-    apolloContext: 'apolloContext',
-    logger: 'logger',
-  }
+  loaderHandles: LocatorHandles = customizableLoaderHandles
 ): LoadDict {
   // Return a LoadDict with loaders for typeDefs, resolvers, and the main orchestrator
   return {
     // Inject the typeDefs and resolvers as a new loader
-    _apollo_typeDefs: { instance: typeDefs },
-    _apollo_resolvers: { instance: resolvers },
-    [prefixHandle('loaderHandles')]: {
-      instance: loaderHandles,
-    },
+    [prefixHandle('typeDefs')]: { instance: typeDefs },
+    [prefixHandle('resolvers')]: { instance: resolvers },
+    [prefixHandle('loaderHandles')]: { instance: loaderHandles },
     // The main orchestrator that loads everything
     apolloStandaloneServerModular: {
-      factory({ apolloMiddlewareLoader }: { apolloMiddlewareLoader: Application }) {
-        // Return the fully configured app
-        return apolloMiddlewareLoader;
-      },
+      instance: 'load everything',
       locateDeps: {
         apolloMiddlewareLoader: 'apolloMiddlewareLoader'
       }
@@ -69,4 +56,4 @@ function loadDictElementGen(
   };
 }
 
-export default loadDictElementGen;
+export default loadDictGen;
