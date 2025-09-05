@@ -50,7 +50,7 @@ function loadDictGen(
     apolloStandaloneServerModular: {
       instance: 'load everything',
       locateDeps: {
-        apolloMiddlewareLoader: 'apolloMiddlewareLoader'
+        apolloPullTogetherAndListen: 'apolloPullTogetherAndListen'
       }
     }
   };
