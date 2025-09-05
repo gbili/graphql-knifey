@@ -1,6 +1,7 @@
 import ctx from "./utils/loadDictGenerator/apolloContext";
 import subgraphServerLoaderGen from "./utils/loadDictGenerator/apolloSubgraphServer";
 import standaloneServerLoaderGen from "./utils/loadDictGenerator/apolloStandaloneServer";
+import standaloneServerModularLoaderGen from "./utils/loadDictGenerator/apolloStandaloneServerModular";
 import cfg from "./utils/loadDictGenerator/appConfig";
 import deDoub from "./utils/deDoubleEscape";
 import lschem from "./utils/loadSchema";
@@ -9,7 +10,6 @@ import { authenticateRequestAndPlugUserInInput as authenticateHelper } from "./u
 import { getFailOutcomeFromError as getFOFE } from "./utils/getFailOutcomeFromError";
 import { mergeAppConfigMaps as acmMerger } from "./utils/mergeAppConfigMaps";
 import appConfigMap from "./config/appConfig";
-import { apolloDepsDict } from "./utils/loadDictGenerator/apolloDepsDict";
 
 // New auth-related imports
 import sessionServiceLDEGen, { SessionService, SessionServiceInterface, SessionData } from "./services/SessionService";
@@ -43,8 +43,7 @@ import {
 export const apolloContextLDEGen = ctx;
 export const apolloSubgraphServerLDEGen = subgraphServerLoaderGen;
 export const apolloStandaloneServerLDEGen = standaloneServerLoaderGen;
-
-export const apolloServerDepsLoadDict = apolloDepsDict;
+export const apolloStandaloneServerModularLDEGen = standaloneServerModularLoaderGen;
 
 export const appConfigLDEGen = cfg;
 
