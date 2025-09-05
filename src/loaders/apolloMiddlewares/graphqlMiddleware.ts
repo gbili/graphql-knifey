@@ -75,8 +75,10 @@ const loadDictElement: LoadDictElement<string> = {
             logger.log('[CSRF DEBUG] CSRF values match:', csrfCookie === csrfHeader);
 
             // Only enforce CSRF if we're using cookie-based auth
-            const cookies = req.signedCookies ?? req.cookies ?? {};
-            const hasAuthCookie = !!(cookies[accessCookieName] || cookies[refreshCookieName]);
+            const checkCookies = (req.signedCookies && Object.keys(req.signedCookies).length > 0) 
+              ? req.signedCookies 
+              : (req.cookies ?? {});
+            const hasAuthCookie = !!(checkCookies[accessCookieName] || checkCookies[refreshCookieName]);
 
             if (hasAuthCookie) {
               logger.log('[CSRF DEBUG] Auth cookies present, enforcing CSRF protection');
@@ -90,8 +92,10 @@ const loadDictElement: LoadDictElement<string> = {
             }
           }
 
-          // Prefer signed cookies if cookieSecret is set
-          const cookies = req.signedCookies ?? req.cookies ?? {};
+          // Prefer signed cookies if cookieSecret is set and they exist
+          const cookies = (req.signedCookies && Object.keys(req.signedCookies).length > 0) 
+            ? req.signedCookies 
+            : (req.cookies ?? {});
           logger.log('[APOLLO DEBUG] All cookies:', cookies);
           logger.log('[APOLLO DEBUG] Looking for cookies - access:', accessCookieName, 'refresh:', refreshCookieName);
 
