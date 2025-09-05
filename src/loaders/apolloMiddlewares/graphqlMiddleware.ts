@@ -49,7 +49,8 @@ const loadDictElement: LoadDictElement<string> = {
       cookieDomain,
       nodeEnv,
       accessCookieName = 'sid',
-      refreshCookieName = 'rid'
+      refreshCookieName = 'rid',
+      secureCookies
     } = appConfig;
 
     app.use(
@@ -105,6 +106,7 @@ const loadDictElement: LoadDictElement<string> = {
             domain: cookieDomain,
             accessName: accessCookieName,
             refreshName: refreshCookieName,
+            secureCookies,
           });
           logger.log('[APOLLO DEBUG] Cookie helpers created');
           logger.log('[APOLLO DEBUG] Cookie domain:', cookieDomain);

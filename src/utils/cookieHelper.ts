@@ -8,14 +8,19 @@ export function makeCookieHelpers(
     domain,
     accessName,
     refreshName,
-  }: { isProd: boolean; domain?: string; accessName: string; refreshName: string }
+    secureCookies,
+  }: { isProd: boolean; domain?: string; accessName: string; refreshName: string; secureCookies?: boolean }
 ) {
+  // In development with HTTP, we can't use secure cookies
+  // If secureCookies is explicitly set, use that, otherwise default based on environment
+  const useSecure = secureCookies !== undefined ? secureCookies : isProd;
+  
   const base = {
     httpOnly: true,
-    sameSite: 'none' as const,                            // 'none' for cross-origin requests
-    secure: true,                                          // Required when SameSite=None
+    sameSite: useSecure ? 'none' as const : 'lax' as const,  // 'none' requires secure, 'lax' for dev
+    secure: useSecure,                                         // Only secure in production or if explicitly set
     path: '/',
-    domain,                                                // can be undefined in dev
+    domain,                                                     // can be undefined in dev
   };
 
   const setAuthCookies = ({

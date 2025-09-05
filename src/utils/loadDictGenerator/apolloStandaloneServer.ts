@@ -34,6 +34,7 @@ export type ApolloServerConfigParams = {
   // Cookie names (override if you like)
   accessCookieName?: string;          // default 'sid'
   refreshCookieName?: string;         // default 'rid'
+  secureCookies?: boolean;            // override secure cookie setting
 };
 
 export type LocatorHandles = { appConfig: string; apolloContext: string; logger: string; };
@@ -116,6 +117,7 @@ function loadDictElementGen(
         nodeEnv,
         accessCookieName = 'sid',
         refreshCookieName = 'rid',
+        secureCookies,
       } = await serviceLocator.get<ApolloServerConfigParams>(appConfigHandle);
 
       const isProd = nodeEnv === 'production';
@@ -208,6 +210,7 @@ function loadDictElementGen(
                 domain: cookieDomain,
                 accessName: accessCookieName,
                 refreshName: refreshCookieName,
+                secureCookies,
               });
               console.log('[APOLLO DEBUG] Cookie helpers created');
               console.log('[APOLLO DEBUG] Cookie domain:', cookieDomain);
