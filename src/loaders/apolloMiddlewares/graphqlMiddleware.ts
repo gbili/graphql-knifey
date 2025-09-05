@@ -5,7 +5,7 @@ import type { Application } from '../app';
 import type { Logger } from 'saylo';
 import type { Request, Response } from 'express';
 import { makeCookieHelpers } from '../../utils/cookieHelper';
-import { retunDepsInjectDecustomizedHandle } from '../../utils/prefixHandle';
+import { prefixValue, retunDepsInjectDecustomizedHandle } from '../../utils/prefixHandle';
 
 export type PublicGraphContext = {
   req: Request;
@@ -28,7 +28,8 @@ const loadDictElement: LoadDictElement<string> = {
     app: 'app',
     apolloServer: 'apolloServer',
     apolloContext: 'apolloContext',
-    logger: 'logger'
+    logger: 'logger',
+    ...prefixValue('loaderHandles'),
   },
   factory({
     app,
