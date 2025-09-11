@@ -48,8 +48,11 @@ const loadDictElement: LoadDictElement<string> = {
       httpServer.listen({ port: serverPort }, resolve)
     );
 
+    // Check if this is a subgraph server
+    const isSubgraph = await serviceLocator.get<boolean | undefined>(prefixHandle('isSubgraph')).catch(() => undefined);
+    
     logger.log(
-      `✅ Public Graph running at http://localhost:${serverPort}${graphqlPath}`
+      `✅ ${isSubgraph ? 'Subgraph' : 'Public Graph'} running at http://localhost:${serverPort}${graphqlPath}`
     );
   }
 };

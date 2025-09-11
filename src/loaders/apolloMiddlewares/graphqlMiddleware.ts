@@ -30,19 +30,22 @@ const loadDictElement: LoadDictElement<string> = {
     apolloContext: 'apolloContext',
     logger: 'logger',
     ...prefixValue('loaderHandles'),
+    ...prefixValue('isSubgraph'),
   },
   factory({
     app,
     apolloServer,
     apolloContext,
     appConfig,
-    logger
+    logger,
+    isSubgraph
   }: {
     app: Application;
     apolloServer: ApolloServer<any>;
     apolloContext: any;
     appConfig: any;
     logger: Logger;
+    isSubgraph?: boolean;
   }) {
     const {
       graphqlPath,
@@ -58,6 +61,26 @@ const loadDictElement: LoadDictElement<string> = {
       expressMiddleware(apolloServer, {
         context: async ({ req, res }): Promise<PublicGraphContext> => {
           logger.log('[APOLLO DEBUG] Context creation started');
+          logger.log('[APOLLO DEBUG] Is subgraph:', isSubgraph);
+
+          // For subgraphs, skip cookie and CSRF handling
+          if (isSubgraph) {
+            // Subgraphs only need basic context without cookies
+            const extra = typeof apolloContext === 'function'
+              ? await apolloContext({ req, res })
+              : apolloContext;
+
+            return {
+              req,
+              res,
+              sessionId: null,
+              refreshId: null,
+              setAuthCookies: () => {},
+              clearAuthCookies: () => {},
+              ...extra,
+            };
+          }
+
           logger.log('[APOLLO DEBUG] Cookie parser available:', !!req.cookies);
           logger.log('[APOLLO DEBUG] Signed cookies available:', !!req.signedCookies);
 
@@ -75,8 +98,8 @@ const loadDictElement: LoadDictElement<string> = {
             logger.log('[CSRF DEBUG] CSRF values match:', csrfCookie === csrfHeader);
 
             // Only enforce CSRF if we're using cookie-based auth
-            const checkCookies = (req.signedCookies && Object.keys(req.signedCookies).length > 0) 
-              ? req.signedCookies 
+            const checkCookies = (req.signedCookies && Object.keys(req.signedCookies).length > 0)
+              ? req.signedCookies
               : (req.cookies ?? {});
             const hasAuthCookie = !!(checkCookies[accessCookieName] || checkCookies[refreshCookieName]);
 
@@ -93,8 +116,8 @@ const loadDictElement: LoadDictElement<string> = {
           }
 
           // Prefer signed cookies if cookieSecret is set and they exist
-          const cookies = (req.signedCookies && Object.keys(req.signedCookies).length > 0) 
-            ? req.signedCookies 
+          const cookies = (req.signedCookies && Object.keys(req.signedCookies).length > 0)
+            ? req.signedCookies
             : (req.cookies ?? {});
           logger.log('[APOLLO DEBUG] All cookies:', cookies);
           logger.log('[APOLLO DEBUG] Looking for cookies - access:', accessCookieName, 'refresh:', refreshCookieName);

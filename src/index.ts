@@ -1,5 +1,6 @@
 import ctx from "./utils/loadDictGenerator/apolloContext";
 import subgraphServerLoaderGen from "./utils/loadDictGenerator/apolloSubgraphServer";
+import subgraphServerModularLoadDictGen from "./utils/loadDictGenerator/apolloSubgraphServerModular";
 import standaloneServerLoaderGen from "./utils/loadDictGenerator/apolloStandaloneServer";
 import standaloneServerModularLoadDictGen from "./utils/loadDictGenerator/apolloStandaloneServerModular";
 import cfg from "./utils/loadDictGenerator/appConfig";
@@ -10,13 +11,13 @@ import { authenticateRequestAndPlugUserInInput as authenticateHelper } from "./u
 import { getFailOutcomeFromError as getFOFE } from "./utils/getFailOutcomeFromError";
 import { mergeAppConfigMaps as acmMerger } from "./utils/mergeAppConfigMaps";
 import appConfigMap from "./config/appConfig";
-import { 
-  prefixHandle, 
-  prefixBoth, 
-  prefixValue, 
-  retunDepsInjectDecustomizedHandle 
+import {
+  prefixHandle,
+  prefixBoth,
+  prefixValue,
+  retunDepsInjectDecustomizedHandle
 } from "./utils/prefixHandle";
-import { 
+import {
   customizableLoaderHandles,
   type CustomizableLoaderHandles,
   type CustomizableLoaderHandlesKeys,
@@ -54,15 +55,21 @@ import {
 
 export const apolloContextLDEGen = ctx;
 export const apolloSubgraphServerLDEGen = subgraphServerLoaderGen;
+export const apolloSubgraphServerModularLDGen = subgraphServerModularLoadDictGen;
 export const apolloStandaloneServerLDEGen = standaloneServerLoaderGen;
 export const apolloStandaloneServerModularLDGen = standaloneServerModularLoadDictGen;
 
 // Export Apollo modular types
-export type { 
+export type {
   ApolloServerConfigParams,
   LocatorHandles as ApolloLocatorHandles,
   Resolvers as ApolloResolvers,
 } from './utils/loadDictGenerator/apolloStandaloneServerModular';
+
+export type {
+  ApolloSubgraphServerConfigParams,
+  Resolvers as ApolloSubgraphResolvers,
+} from './utils/loadDictGenerator/apolloSubgraphServerModular';
 
 export const appConfigLDEGen = cfg;
 

@@ -1,4 +1,4 @@
-export type PrefixedHandles = 'loaderHandles' | 'resolvers' | 'typeDefs'
+export type PrefixedHandles = 'loaderHandles' | 'resolvers' | 'typeDefs' | 'isSubgraph'
 
 export const customizableLoaderHandles = {
   appConfig: 'appConfig',
