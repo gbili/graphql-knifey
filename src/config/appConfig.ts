@@ -1,3 +1,5 @@
+import { isMeantToBeTrue } from "swiss-army-knifey";
+
 const appConfigMap = function (env: {
   APP_PORT?: string;
   APPLICATION_NAME?: string;
@@ -17,9 +19,6 @@ const appConfigMap = function (env: {
   if (undefined === env.APPLICATION_NAME) {
     throw new Error('Missing .env var APPLICATION_NAME, ex: "My App" used as brand name in email verification');
   }
-  if (undefined === env.CORS_ALLOWED_ORIGIN) {
-    throw new Error('Missing .env var CORS_ALLOWED_ORIGIN, is required to determine who can query');
-  }
   if (undefined === env.GRAPHQL_INTROSPECTION) {
     throw new Error('Missing .env var GRAPHQL_INTROSPECTION, is required to determine graphql playground availability');
   }
@@ -31,8 +30,8 @@ const appConfigMap = function (env: {
   }
   return {
     applicationName: env.APPLICATION_NAME,
-    corsAllowedOrigin: env.CORS_ALLOWED_ORIGIN,
-    corsCredentials: env.CORS_CREDENTIALS !== 'false', // default true
+    corsAllowedOrigin: env.CORS_ALLOWED_ORIGIN || null,
+    corsCredentials: isMeantToBeTrue(env.CORS_CREDENTIALS), // default true
     cookieSecret: env.COOKIE_SECRET,
     cookieDomain: env.COOKIE_DOMAIN,
     graphqlIntrospection: !!env.GRAPHQL_INTROSPECTION,
@@ -47,7 +46,7 @@ const appConfigMap = function (env: {
     // Also keep old names for backward compatibility
     sessionCookieName: env.SESSION_COOKIE_NAME || 'sid',
     // Optional middleware list (comma-separated)
-    apolloMiddlewaresList: env.APOLLO_MIDDLEWARES_LIST 
+    apolloMiddlewaresList: env.APOLLO_MIDDLEWARES_LIST
       ? env.APOLLO_MIDDLEWARES_LIST.split(',').map(s => s.trim())
       : undefined,
   };
