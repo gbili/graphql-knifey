@@ -1,6 +1,18 @@
-import { GraphQLResolverMap } from "@apollo/subgraph/dist/schema-helper/resolverMap";
+import { GraphQLFieldResolver, GraphQLScalarType } from 'graphql';
 import { IncomingMessage } from "http";
 import { TokenAuthCustomizableService } from 'jwt-authorized';
+
+export interface GraphQLResolverMap<TContext = {}> {
+  [typeName: string]: {
+    [fieldName: string]: GraphQLFieldResolver<any, TContext> | {
+      requires?: string;
+      resolve?: GraphQLFieldResolver<any, TContext>;
+      subscribe?: GraphQLFieldResolver<any, TContext>;
+    };
+  } | GraphQLScalarType | {
+    [enumValue: string]: string | number;
+  };
+}
 
 export type GqlResolversContextParams<T> = {
   tokenAuthService: TokenAuthCustomizableService;
