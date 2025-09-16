@@ -1,43 +1,64 @@
-# GraphQL Knifey
+# graphql-knifey
 
-Reuse code for generic GraphQL projects with built-in session/cookie authentication support.
+A modular, dependency-injection based toolkit for building GraphQL servers with Apollo Server. Supports both standalone and federated subgraph configurations.
 
-## Version 2.7.0 Features
+## Version 5.0.0 - Breaking Changes
 
+- 🚀 **@apollo/subgraph is now optional** - Only needed for federated subgraph servers
+- 🔧 **Modular architecture** - Choose between standalone or subgraph configurations
 - 🍪 **Cookie-based session authentication** with Redis storage
 - 🔐 **Multiple auth strategies**: Cookie, JWT, and Hybrid modes
-- 🔄 **Seamless migration path** from JWT to sessions
-- 🏗️ **Clean architecture** with separated context creation logic
-- 📦 **DI-why integration** for dependency injection
+- 📦 **Minimal DI container** - Common dependencies without forcing unnecessary packages
 
 ## Table of Contents
 
-- [Basic Usage](#basic-usage)
-- [Session & Cookie Authentication](#session--cookie-authentication)
-- [Architecture](#architecture)
-- [Migration from JWT to Sessions](#migration-from-jwt-to-sessions)
-- [Customize/Augment appConfig](#customizeaugment-appconfig)
-- [Cookies vs Authorization Header](#cookies-vs-authorization-header)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Usage Patterns](#usage-patterns)
+  - [Standalone Server (Modular)](#1-standalone-server-modular---recommended)
+  - [Federated Subgraph (Modular)](#2-federated-subgraph-modular)
+  - [Legacy Patterns](#legacy-patterns)
+- [Authentication](#authentication)
+- [Migration from v4](#migration-from-v4-to-v5)
 
-## Basic Usage
+## Installation
 
-```ts
-import diContainer, { apolloContextLDEGen, apolloServerLDEGen, appConfigLDEGen } from 'graphql-knifey';
+```bash
+npm install graphql-knifey@5.0.0
 
-// create your injection dict
-const myInjectionDict = {
-  // map config from env
-  apolloContext: apolloContextLDEGen({
-    userService: 'userService',
-    tokenAuthService: 'tokenAuthService',
-  }),
-  apolloServer: apolloServerLDEGen(resolvers, graphqlSchema),
-  aService: aServiceLoadDictElement,
-  // ... can override graphql-knifey entries
+# For standalone servers (most common) - no additional dependencies needed!
+
+# For federated subgraph servers only:
+npm install @apollo/subgraph
+```
+
+## Quick Start
+
+```typescript
+import {
+  diContainer,
+  apolloStandaloneServerModularLDGen,
+  loadSchema,
+  GQLResolverDict
+} from 'graphql-knifey';
+
+// Define your GraphQL schema
+const graphqlSchema = loadSchema('./src/graphql/schema/schema.graphql');
+
+// Type-safe resolvers
+const resolvers: GQLResolverDict<MyContext> = {
+  Query: {
+    hello: () => 'Hello World!'
+  }
 };
 
-// pass it to graphql-knifey's default one
-diContainer.addToLoadDict(myInjectionDict);
+// Add Apollo server to the DI container
+diContainer.addToLoadDict({
+  ...apolloStandaloneServerModularLDGen(resolvers, graphqlSchema)
+});
+
+// Start the server
+await diContainer.get('apolloStandaloneServerModular');
 ```
 
 ## Session & Cookie Authentication
