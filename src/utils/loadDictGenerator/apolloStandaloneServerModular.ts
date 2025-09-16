@@ -46,6 +46,7 @@ function loadDictGen(
     [prefixHandle('typeDefs')]: { instance: typeDefs },
     [prefixHandle('resolvers')]: { instance: resolvers },
     [prefixHandle('loaderHandles')]: { instance: loaderHandles },
+    [prefixHandle('isSubgraph')]: { instance: false }, // Standalone servers are not subgraphs
     // The main orchestrator that loads everything
     apolloStandaloneServerModular: {
       instance: 'load everything',
