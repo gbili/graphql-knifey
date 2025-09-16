@@ -8,8 +8,19 @@ import express from 'express';
 import { Application } from '../../loaders/app';
 import { HttpServer } from '../../loaders/httpServer';
 import { GetInstanceType, LoadDictElement } from 'di-why/build/src/DiContainer';
-import { buildSubgraphSchema } from '@apollo/subgraph';
 import { Logger } from 'saylo';
+
+// Import buildSubgraphSchema lazily - will throw if @apollo/subgraph is not installed
+// This is intentional - users of apolloSubgraphServer must have @apollo/subgraph installed
+let buildSubgraphSchema: any;
+try {
+  buildSubgraphSchema = require('@apollo/subgraph').buildSubgraphSchema;
+} catch (e) {
+  // Will only fail when this module is actually used
+  buildSubgraphSchema = () => {
+    throw new Error('@apollo/subgraph must be installed to use apolloSubgraphServerLDEGen. Run: npm install @apollo/subgraph');
+  };
+}
 
 export type Resolvers<Context> = TypeWithoutUndefined<GraphQLResolverMap<Context>>;
 
