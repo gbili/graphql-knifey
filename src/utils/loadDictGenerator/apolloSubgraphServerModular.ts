@@ -3,8 +3,7 @@ import { LoadDict } from 'di-why/build/src/DiContainer';
 import gql from 'graphql-tag';
 import { prefixHandle } from '../prefixHandle';
 import { CustomizableLoaderHandles, customizableLoaderHandles } from './customizableLoaderHandles';
-import { GraphQLResolverMap } from '@apollo/subgraph/dist/schema-helper/resolverMap';
-import { TypeWithoutUndefined } from '../../generalTypes';
+import { TypeWithoutUndefined, GraphQLResolverMap } from '../../generalTypes';
 
 // --- Types ----------------------------------------------------------
 

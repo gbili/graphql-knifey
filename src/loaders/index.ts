@@ -7,9 +7,6 @@ import appConfigMap from "../config/appConfig";
 import appConfigLDEGen from "../utils/loadDictGenerator/appConfig";
 import { LoadDict } from "di-why/build/src/DiContainer";
 import { mysqlReqLoader as mysqlReq, mysqlMultipleReqLoader as mysqlMultipleReq } from "mysql-oh-wait-utils";
-
-// New modular Apollo loaders
-import apolloServer from "./apolloServer";
 import apolloPullTogetherAndListen from "./apolloPullTogetherAndListen";
 import * as apolloPlugins from "./apolloPlugins";
 import * as apolloMiddlewares from "./apolloMiddlewares";
@@ -20,6 +17,8 @@ import httpServer from "./httpServer";
 
 const logger = loggerGen({ LOGGER_DEBUG: false, LOGGER_LOG: true, });
 
+// Minimal injection dict with common dependencies for both standalone and subgraph servers
+// Users will add apolloStandaloneServerModularLDGen or apolloSubgraphServerModularLDGen on top
 export const injectionDict: LoadDict = {
   appConfig: appConfigLDEGen(appConfigMap),
   env,
@@ -28,18 +27,17 @@ export const injectionDict: LoadDict = {
   mysqlReq,
   mysqlMultipleReq,
   ...tokenAuthServiceLDEs,
-  // New modular Apollo loaders
+  // Common Apollo infrastructure
   [prefixHandle('loaderHandles')]: loaderHandles,
   app,
   httpServer,
-  apolloServer,
   ...apolloPlugins,
   ...apolloMiddlewares,
   apolloPullTogetherAndListen,
 };
 
-// TODO remove logger param. Make the DiContainer use the logger passed
-// in injection dict or create a default one from within
+// Minimal DI container with common dependencies
+// No @apollo/subgraph dependency here!
 const di = new DiContainer({
   logger,
   load: injectionDict,
