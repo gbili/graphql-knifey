@@ -1,46 +1,34 @@
 import env from "./env";
 import events from "./events";
-import { tokenAuthServiceLDEs } from "./tokenAuthService";
-import DiContainer from "di-why";
-import { loggerGen } from "swiss-army-knifey";
+import { logger } from "saylo";
 import appConfigMap from "../config/appConfig";
 import appConfigLDEGen from "../utils/loadDictGenerator/appConfig";
 import { LoadDict } from "di-why/build/src/DiContainer";
-import { mysqlReqLoader as mysqlReq, mysqlMultipleReqLoader as mysqlMultipleReq } from "mysql-oh-wait-utils";
 import apolloPullTogetherAndListen from "./apolloPullTogetherAndListen";
-import * as apolloPlugins from "./apolloPlugins";
+import apolloPluginsDict from "./apolloPlugins";
 import * as apolloMiddlewares from "./apolloMiddlewares";
 import loaderHandles from "./loaderHandles";
 import { prefixHandle } from "../utils/prefixHandle";
 import app from "./app";
 import httpServer from "./httpServer";
+import list from './apolloPlugins/list';
+import apolloSubgraphServer from "./apolloSubgraphServer";
+import apolloStandaloneServer from "./apolloStandaloneServer";
 
-const logger = loggerGen({ LOGGER_DEBUG: false, LOGGER_LOG: true, });
-
-// Minimal injection dict with common dependencies for both standalone and subgraph servers
-// Users will add apolloStandaloneServerModularLDGen or apolloSubgraphServerModularLDGen on top
-export const injectionDict: LoadDict = {
+export const loadDict: LoadDict = {
   appConfig: appConfigLDEGen(appConfigMap),
   env,
   events,
   logger: { instance: logger },
-  mysqlReq,
-  mysqlMultipleReq,
-  ...tokenAuthServiceLDEs,
-  // Common Apollo infrastructure
   [prefixHandle('loaderHandles')]: loaderHandles,
-  app,
+  app, // express
   httpServer,
-  ...apolloPlugins,
-  ...apolloMiddlewares,
-  apolloPullTogetherAndListen,
+  // ApolloServer Both flavors in the loaders
+  apolloSubgraphServer,
+  apolloStandaloneServer,
+  ...apolloPluginsDict, // available plugins
+  apolloPlugins: list, // loader for selection of plugins used by ApolloServer
+  ...apolloMiddlewares, //available middlewares loaders
+  // if you call this
+  [prefixHandle('apolloPullTogetherAndListen')]: apolloPullTogetherAndListen,
 };
-
-// Minimal DI container with common dependencies
-// No @apollo/subgraph dependency here!
-const di = new DiContainer({
-  logger,
-  load: injectionDict,
-});
-
-export default di;

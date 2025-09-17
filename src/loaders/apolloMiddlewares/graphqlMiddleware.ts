@@ -5,7 +5,9 @@ import type { Application } from '../app';
 import type { Logger } from 'saylo';
 import type { Request, Response } from 'express';
 import { makeCookieHelpers } from '../../utils/cookieHelper';
-import { prefixValue, retunDepsInjectDecustomizedHandle } from '../../utils/prefixHandle';
+import { prefixValue } from '../../utils/prefixHandle';
+import { ApolloServerConfigParams } from '../apolloSubgraphServer';
+import { CustomizableLoaderHandles } from '../../utils/loadDictGenerator/customizableLoaderHandles';
 
 export type PublicGraphContext = {
   req: Request;
@@ -23,10 +25,23 @@ export type PublicGraphContext = {
 };
 
 const loadDictElement: LoadDictElement<string> = {
-  before: retunDepsInjectDecustomizedHandle('appConfig'),
+  // IMPORTANT, this is where we load apolloServer
+  before: async ({ serviceLocator, deps: { loaderHandles, isSubgraph, app, apolloContext, logger } }) => {
+    const apolloServerHandle = isSubgraph ? `apolloSubgraphServer` : 'apolloStandaloneServer';
+    if (!serviceLocator.couldLoad(apolloServerHandle)) {
+      throw new Error(`With the current setup, there is now way to load an apolloServer instance. isSubgraph: ${isSubgraph}, trying to load: ${apolloServerHandle}`);
+    };
+    return {
+      app,
+      apolloServer: await serviceLocator.get(apolloServerHandle),
+      apolloContext,
+      appConfig: await serviceLocator.get<ApolloServerConfigParams>((loaderHandles as CustomizableLoaderHandles).appConfig),
+      logger,
+      isSubgraph,
+    };
+  },
   locateDeps: {
     app: 'app',
-    apolloServer: 'apolloServer',
     apolloContext: 'apolloContext',
     logger: 'logger',
     ...prefixValue('loaderHandles'),

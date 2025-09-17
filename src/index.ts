@@ -1,12 +1,11 @@
 import ctx from "./utils/loadDictGenerator/apolloContext";
-import subgraphServerLoaderGen from "./utils/loadDictGenerator/apolloSubgraphServer";
-import subgraphServerModularLoadDictGen from "./utils/loadDictGenerator/apolloSubgraphServerModular";
-import standaloneServerLoaderGen from "./utils/loadDictGenerator/apolloStandaloneServer";
-import standaloneServerModularLoadDictGen from "./utils/loadDictGenerator/apolloStandaloneServerModular";
+import subgraphServerLDE from "./loaders/apolloSubgraphServer";
+import loadDictGenGen from "./utils/loadDictGenerator/apolloServerModular";
+import standaloneServerLDE from "./loaders/apolloStandaloneServer";
 import cfg from "./utils/loadDictGenerator/appConfig";
 import deDoub from "./utils/deDoubleEscape";
 import lschem from "./utils/loadSchema";
-import di from "./loaders";
+import { loadDict } from "./loaders";
 import { authenticateRequestAndPlugUserInInput as authenticateHelper } from "./utils/resolverAuthenticateHelper";
 import { getFailOutcomeFromError as getFOFE } from "./utils/getFailOutcomeFromError";
 import { mergeAppConfigMaps as acmMerger } from "./utils/mergeAppConfigMaps";
@@ -54,22 +53,21 @@ import {
 } from "./utils/createAuthContext";
 
 export const apolloContextLDEGen = ctx;
-export const apolloSubgraphServerLDEGen = subgraphServerLoaderGen;
-export const apolloSubgraphServerModularLDGen = subgraphServerModularLoadDictGen;
-export const apolloStandaloneServerLDEGen = standaloneServerLoaderGen;
-export const apolloStandaloneServerModularLDGen = standaloneServerModularLoadDictGen;
+export { subgraphServerLDE, standaloneServerLDE };
+export const apolloSubgraphServerModularLDGen = loadDictGenGen(true);
+export const apolloStandaloneServerModularLDGen = loadDictGenGen(false);
 
 // Export Apollo modular types
 export type {
-  ApolloServerConfigParams,
+  ApolloSubgraphServerConfigParam,
   LocatorHandles as ApolloLocatorHandles,
   Resolvers as ApolloResolvers,
-} from './utils/loadDictGenerator/apolloStandaloneServerModular';
+} from './utils/loadDictGenerator/apolloServerModular';
 
 export type {
-  ApolloSubgraphServerConfigParams,
+  ApolloStandaloneServerConfigParams,
   Resolvers as ApolloSubgraphResolvers,
-} from './utils/loadDictGenerator/apolloSubgraphServerModular';
+} from './utils/loadDictGenerator/apolloServerModular';
 
 export const appConfigLDEGen = cfg;
 
@@ -82,7 +80,7 @@ export const mergeToDefaultAppConfigMap = acmMerger(appConfigMap);
 export const deDoubleEscape = deDoub;
 export const loadSchema = lschem;
 
-export const diContainer = di;
+export const graphqlKnifeyLoadDict = loadDict;
 
 // Export prefix utilities and types
 export {
@@ -129,4 +127,4 @@ export {
   type PublicGraphContextWithAuth,
 };
 
-export default diContainer;
+export default graphqlKnifeyLoadDict;
