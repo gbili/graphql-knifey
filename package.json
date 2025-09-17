@@ -17,7 +17,7 @@
     "@types/cookie-parser": ">=1.4.0",
     "cookie-parser": ">=1.4.0",
     "cors": ">=2.8.0",
-    "di-why": ">=0.15.0",
+    "di-why": ">=0.16.3",
     "dotenv": ">=16.0.0",
     "express": ">=4.0.0",
     "graphql-tag": ">=2.12.0",
