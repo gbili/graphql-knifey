@@ -1,7 +1,8 @@
-export type PrefixedHandles = 'loaderHandles' | 'resolvers' | 'typeDefs' | 'isSubgraph' | 'apolloPlugins' | 'apolloPullTogetherAndListen';
+export type PrefixedHandles = 'loaderHandles' | 'resolvers' | 'typeDefs' | 'isSubgraph' | 'apolloPlugins' | 'apolloPullTogetherAndListen' | 'appConfigMap';
 
 export const customizableLoaderHandles = {
   appConfig: 'appConfig',
+  appConfigMap: 'appConfigMap',
   apolloContext: 'apolloContext',
   logger: 'logger',
 }

@@ -2,7 +2,7 @@ import ctx from "./utils/loadDictGenerator/apolloContext";
 import subgraphServerLDE from "./loaders/apolloSubgraphServer";
 import loadDictGenGen from "./utils/loadDictGenerator/apolloServerModular";
 import standaloneServerLDE from "./loaders/apolloStandaloneServer";
-import cfg from "./utils/loadDictGenerator/appConfig";
+import cfg from "./loaders/appConfig";
 import deDoub from "./utils/deDoubleEscape";
 import lschem from "./utils/loadSchema";
 import { loadDict } from "./loaders";

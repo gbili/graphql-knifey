@@ -1,8 +1,7 @@
 import env from "./env";
 import events from "./events";
 import { logger } from "saylo";
-import appConfigMap from "../config/appConfig";
-import appConfigLDEGen from "../utils/loadDictGenerator/appConfig";
+import appConfigMapMergerLDE from './appConfigMapMerger';
 import { LoadDict } from "di-why/build/src/DiContainer";
 import apolloPullTogetherAndListen from "./apolloPullTogetherAndListen";
 import apolloPluginsDict from "./apolloPlugins";
@@ -14,9 +13,11 @@ import httpServer from "./httpServer";
 import list from './apolloPlugins/list';
 import apolloSubgraphServer from "./apolloSubgraphServer";
 import apolloStandaloneServer from "./apolloStandaloneServer";
+import appConfig from "./appConfig";
 
 export const loadDict: LoadDict = {
-  appConfig: appConfigLDEGen(appConfigMap),
+  [prefixHandle('appConfigMap')]: appConfigMapMergerLDE,
+  appConfig, // this will contain our appConfig and the user's appConfig merged thanks to appConfigMapMergerLDE
   env,
   events,
   logger: { instance: logger },
