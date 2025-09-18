@@ -1,6 +1,6 @@
 {
   "name": "graphql-knifey",
-  "version": "5.1.1",
+  "version": "5.1.2",
   "description": "Tools for dealing with graphql server side",
   "main": "build/src/index.js",
   "scripts": {
