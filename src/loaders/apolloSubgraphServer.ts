@@ -7,7 +7,7 @@ import { Application } from './app';
 import { HttpServer } from './httpServer';
 import { GetInstanceType, LoadDictElement } from 'di-why/build/src/DiContainer';
 import { Logger } from 'saylo';
-import { prefixValue } from '../utils/prefixHandle';
+import { prefixHandle, prefixValue } from '../utils/prefixHandle';
 import { CustomizableLoaderHandles } from '../utils/loadDictGenerator/customizableLoaderHandles';
 
 // Import buildSubgraphSchema lazily - will throw if @apollo/subgraph is not installed
@@ -64,9 +64,10 @@ const loadDictElement: LoadDictElement<GetInstanceType<typeof ApolloServer>> = {
     ...prefixValue('loaderHandles'),
     apolloPlugins: 'apolloPlugins',
   },
-  async after({ me: server, serviceLocator, deps: { loaderHandles } }) {
-    const contextFunction = await serviceLocator.get((loaderHandles as CustomizableLoaderHandles).apolloContext);
-    const logger = await serviceLocator.get<Logger>((loaderHandles as CustomizableLoaderHandles).logger);
+  async after({ me: server, serviceLocator }) {
+    const lh = await serviceLocator.get<CustomizableLoaderHandles>(prefixHandle('loaderHandles'));
+    const contextFunction = await serviceLocator.get(lh.apolloContext);
+    const logger = await serviceLocator.get<Logger>(lh.logger);
     const app = await serviceLocator.get<Application>('app');
     const httpServer = await serviceLocator.get<HttpServer>('httpServer');
 
@@ -77,7 +78,7 @@ const loadDictElement: LoadDictElement<GetInstanceType<typeof ApolloServer>> = {
       nodeEnv,
       enableDevCors = false,
       corsAllowedOrigin,
-    } = await serviceLocator.get<ApolloServerConfigParams>((loaderHandles as CustomizableLoaderHandles).appConfig);
+    } = await serviceLocator.get<ApolloServerConfigParams>(lh.appConfig);
 
     try {
       logger.log(`🚀 Starting Apollo (subgraph) 🚀`);

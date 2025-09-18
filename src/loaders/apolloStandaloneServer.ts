@@ -11,7 +11,7 @@ import { Application } from './app';
 import { HttpServer } from './httpServer';
 import { TypeWithoutUndefined } from '../generalTypes';
 import { makeCookieHelpers } from '../utils/cookieHelper';
-import { prefixValue } from '../utils/prefixHandle';
+import { prefixHandle, prefixValue } from '../utils/prefixHandle';
 import { CustomizableLoaderHandles } from '../utils/loadDictGenerator/customizableLoaderHandles';
 
 // --- Types ----------------------------------------------------------
@@ -83,9 +83,10 @@ const loadDictElement: LoadDictElement<GetInstanceType<typeof ApolloServer>> = {
     ...prefixValue('loaderHandles'),
     apolloPlugins: 'apolloPlugins',
   },
-  async after({ me: server, serviceLocator, deps: { loaderHandles } }) {
-    const rawAppContext = await serviceLocator.get((loaderHandles as CustomizableLoaderHandles).apolloContext); // you may merge this into final context
-    const logger = await serviceLocator.get<Logger>((loaderHandles as CustomizableLoaderHandles).logger);
+  async after({ me: server, serviceLocator }) {
+    const lh = await serviceLocator.get<CustomizableLoaderHandles>(prefixHandle('loaderHandles'));
+    const rawAppContext = await serviceLocator.get(lh.apolloContext); // you may merge this into final context
+    const logger = await serviceLocator.get<Logger>(lh.logger);
     const app = await serviceLocator.get<Application>('app');
     const httpServer = await serviceLocator.get<HttpServer>('httpServer');
 
@@ -101,7 +102,7 @@ const loadDictElement: LoadDictElement<GetInstanceType<typeof ApolloServer>> = {
       accessCookieName = 'sid',
       refreshCookieName = 'rid',
       secureCookies,
-    } = await serviceLocator.get<ApolloServerConfigParams>((loaderHandles as CustomizableLoaderHandles).appConfig);
+    } = await serviceLocator.get<ApolloServerConfigParams>(lh.appConfig);
 
     const isProd = nodeEnv === 'production';
 
