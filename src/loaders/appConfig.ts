@@ -1,6 +1,6 @@
 import { LoadDictElement } from 'di-why/build/src/DiContainer';
 import { UnknownEnv } from 'swiss-army-knifey';
-import { prefixHandle } from '..';
+import { prefixHandle } from '../utils/prefixHandle';
 
 export type AppConfigMap<R = any> = (env: UnknownEnv) => R;
 

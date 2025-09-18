@@ -1,6 +1,6 @@
 import { LoadDictElement } from 'di-why/build/src/DiContainer';
 import { UnknownEnv } from 'swiss-army-knifey';
-import { CustomizableLoaderHandles } from '..';
+import { CustomizableLoaderHandles } from '../utils/loadDictGenerator/customizableLoaderHandles';
 import { prefixValue } from '../utils/prefixHandle';
 import { mergeAppConfigMaps } from '../utils/mergeAppConfigMaps';
 import appConfigMap from '../config/appConfig';
