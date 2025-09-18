@@ -1,6 +1,7 @@
 import { LoadDictElement } from 'di-why/build/src/DiContainer';
 import { UnknownEnv } from 'swiss-army-knifey';
-import { CustomizableLoaderHandles, prefixValue } from '..';
+import { CustomizableLoaderHandles } from '..';
+import { prefixValue } from '../utils/prefixHandle';
 import { mergeAppConfigMaps } from '../utils/mergeAppConfigMaps';
 import appConfigMap from '../config/appConfig';
 import { Logger } from 'saylo';
