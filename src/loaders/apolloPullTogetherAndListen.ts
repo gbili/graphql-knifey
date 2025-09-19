@@ -36,24 +36,11 @@ const loadDictElement: LoadDictElement<string> = {
     }
 
     // the http server is created, and wraps express app
-    const httpServer = await serviceLocator.get<HttpServer>('httpServer');
-    const {
-      serverPort,
-      graphqlPath,
-      applicationName
-    } = await serviceLocator.get<any>(loaderHandles.appConfig);
-
-    logger.log(`🚀 Launching "${applicationName}" 🚀`);
-    await new Promise<void>((resolve) =>
-      httpServer.listen({ port: serverPort }, resolve)
-    );
+    await serviceLocator.get<HttpServer>('httpServer');
 
     // Check if this is a subgraph server
-    const isSubgraph = await serviceLocator.get<boolean | undefined>(prefixHandle('isSubgraph')).catch(() => undefined);
-    
-    logger.log(
-      `✅ ${isSubgraph ? 'Subgraph' : 'Public Graph'} running at http://localhost:${serverPort}${graphqlPath}`
-    );
+    const isSubgraph = await serviceLocator.get<boolean>(prefixHandle('isSubgraph'));
+    logger.log(`✅ Apollo server launched as ${isSubgraph ? 'Subgraph' : 'Public Graph'}`);
   }
 };
 

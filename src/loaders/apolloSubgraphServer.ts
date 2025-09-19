@@ -4,7 +4,6 @@ import { expressMiddleware } from '@apollo/server/express4';
 import { TypeWithoutUndefined, GraphQLResolverMap } from '../generalTypes';
 import express from 'express';
 import { Application } from './app';
-import { HttpServer } from './httpServer';
 import { GetInstanceType, LoadDictElement } from 'di-why/build/src/DiContainer';
 import { Logger } from 'saylo';
 import { prefixHandle, prefixValue } from '../utils/prefixHandle';
@@ -69,12 +68,9 @@ const loadDictElement: LoadDictElement<GetInstanceType<typeof ApolloServer>> = {
     const contextFunction = await serviceLocator.get(lh.apolloContext);
     const logger = await serviceLocator.get<Logger>(lh.logger);
     const app = await serviceLocator.get<Application>('app');
-    const httpServer = await serviceLocator.get<HttpServer>('httpServer');
 
     const {
-      serverPort,
       graphqlPath,
-      applicationName,
       nodeEnv,
       enableDevCors = false,
       corsAllowedOrigin,
@@ -108,13 +104,6 @@ const loadDictElement: LoadDictElement<GetInstanceType<typeof ApolloServer>> = {
       // Simple health endpoint
       app.get('/healthz', (_req, res) => res.status(200).send('ok'));
 
-      logger.log(`🚀 Launching "${applicationName}" 🚀`);
-      await new Promise<void>((resolve) =>
-        httpServer.listen({ port: serverPort }, resolve)
-      );
-      logger.log(
-        `✅ Subgraph running at http://localhost:${serverPort}${graphqlPath}`
-      );
     } catch (err) {
       logger.error('Error starting server', err);
     }

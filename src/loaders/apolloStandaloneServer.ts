@@ -8,7 +8,6 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import type { Request, Response } from 'express';
 import { Application } from './app';
-import { HttpServer } from './httpServer';
 import { TypeWithoutUndefined } from '../generalTypes';
 import { makeCookieHelpers } from '../utils/cookieHelper';
 import { prefixHandle, prefixValue } from '../utils/prefixHandle';
@@ -88,12 +87,9 @@ const loadDictElement: LoadDictElement<GetInstanceType<typeof ApolloServer>> = {
     const rawAppContext = await serviceLocator.get(lh.apolloContext); // you may merge this into final context
     const logger = await serviceLocator.get<Logger>(lh.logger);
     const app = await serviceLocator.get<Application>('app');
-    const httpServer = await serviceLocator.get<HttpServer>('httpServer');
 
     const {
-      serverPort,
       graphqlPath,
-      applicationName,
       corsAllowedOrigin,
       corsCredentials = true,
       cookieSecret,
@@ -225,15 +221,6 @@ const loadDictElement: LoadDictElement<GetInstanceType<typeof ApolloServer>> = {
       );
 
       app.get('/healthz', (_req, res) => res.status(200).send('ok'));
-
-      logger.log(`🚀 Launching "${applicationName}" 🚀`);
-      await new Promise<void>((resolve) =>
-        httpServer.listen({ port: serverPort }, resolve)
-      );
-
-      logger.log(
-        `✅ Public Graph running at http://localhost:${serverPort}${graphqlPath}`
-      );
     } catch (err) {
       logger.error('Error starting server', err);
     }
