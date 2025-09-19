@@ -72,7 +72,7 @@ export type {
 
 export const appConfigLDEGen = cfg;
 
-export type { GQLResolverDict, ActionOutcomeError, ActionOutcomeForbidden, ActionOutcomeSuccess, ActionOutcomeFail, ActionStatus, UUIDProp, UUID } from "./generalTypes";
+export type { Application, GQLResolverDict, ActionOutcomeError, ActionOutcomeForbidden, ActionOutcomeSuccess, ActionOutcomeFail, ActionStatus, UUIDProp, UUID } from "./generalTypes";
 
 export const authenticateRequestAndPlugUserInInput = authenticateHelper;
 export const getFailOutcomeFromError = getFOFE;

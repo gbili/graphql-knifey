@@ -1,6 +1,9 @@
 import { GraphQLFieldResolver, GraphQLScalarType } from 'graphql';
 import { IncomingMessage } from "http";
 import { TokenAuthCustomizableService } from 'jwt-authorized';
+import express from 'express';
+
+export type Application = ReturnType<typeof express>;
 
 export interface GraphQLResolverMap<TContext = {}> {
   [typeName: string]: {
