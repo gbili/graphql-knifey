@@ -58,7 +58,7 @@ diContainer.addToLoadDict({
 });
 
 // Start the server
-await diContainer.get('apolloStandaloneServerModular');
+await diContainer.get('apolloServer');
 ```
 
 ## Session & Cookie Authentication
@@ -252,6 +252,35 @@ const resolvers = {
 ```
 
 ## Architecture
+
+### Middleware Architecture
+
+The new modular architecture provides flexible middleware configuration:
+
+```ts
+import { MiddlewarePathConfig } from 'graphql-knifey';
+
+const middlewareConfig: MiddlewarePathConfig = {
+  '/graphql': [
+    { name: 'expressTrustProxyMiddleware', priority: 100 },
+    { name: 'expressCorsMiddleware', priority: 90 },
+    { name: 'expressCookieParserMiddleware', priority: 80 },
+    { name: 'expressBodyParserMiddleware', priority: 70 },
+    { name: 'expressGraphqlMiddleware', required: true, priority: -100 },
+  ],
+  '/healthz': [
+    { name: 'expressHealthCheckMiddleware' }
+  ]
+};
+
+// Pass custom configuration
+const loaders = apolloStandaloneServerModularLDGen(
+  resolvers,
+  typeDefs,
+  undefined, // use default loader handles
+  middlewareConfig
+);
+```
 
 ### Context Creation Flow
 
@@ -473,12 +502,23 @@ All exports are fully typed. Key types include:
 
 ```ts
 import type {
+  // Authentication types
   SessionServiceInterface,
   SessionData,
   AuthStrategy,
   AuthResult,
   ValidationResult,
   PublicGraphContextWithAuth,
+
+  // Middleware configuration types
+  MiddlewareAttacher,
+  MiddlewareConfig,
+  MiddlewarePathConfig,
+
+  // Apollo/GraphQL types
+  GQLResolverDict,
+  Resolvers,
+  ApolloServerConfigParams,
 } from 'graphql-knifey';
 ```
 

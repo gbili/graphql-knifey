@@ -5,6 +5,7 @@ import { prefixHandle, prefixValue } from '../prefixHandle';
 import { CustomizableLoaderHandles, customizableLoaderHandles } from './customizableLoaderHandles';
 import { TypeWithoutUndefined, GraphQLResolverMap } from '../../generalTypes';
 import { loadDict } from '../../loaders';
+import { MiddlewarePathConfig } from '../../types/middleware';
 
 // --- Types ----------------------------------------------------------
 
@@ -38,6 +39,21 @@ export type ApolloStandaloneServerConfigParams = ApolloServerConfigParams & {
 
 export type LocatorHandles = CustomizableLoaderHandles;
 
+// --- Middleware Configuration --------------------------------------
+
+const DEFAULT_MIDDLEWARE_CONFIG: MiddlewarePathConfig = {
+  '/graphql': [
+    { name: 'expressTrustProxyMiddleware', priority: 100 },  // Must be first for correct IPs
+    { name: 'expressCorsMiddleware', priority: 90 },
+    { name: 'expressCookieParserMiddleware', priority: 80 },
+    { name: 'expressBodyParserMiddleware', priority: 70 },
+    { name: 'expressGraphqlMiddleware', required: true, priority: -100 }, // Must be last
+  ],
+  '/healthz': [
+    { name: 'expressHealthCheckMiddleware', priority: 0 },
+  ],
+};
+
 // --- Loader ---------------------------------------------------------
 
 /**
@@ -48,7 +64,8 @@ export type LocatorHandles = CustomizableLoaderHandles;
 const loadDictGenGen = (isSubgraph: boolean) => (
   resolvers: Resolvers<any>,
   typeDefs: ReturnType<typeof gql>,
-  loaderHandles: LocatorHandles = customizableLoaderHandles
+  loaderHandles: LocatorHandles = customizableLoaderHandles,
+  middlewareConfig: MiddlewarePathConfig = DEFAULT_MIDDLEWARE_CONFIG
 ): LoadDict => {
   // Return a LoadDict with loaders for typeDefs, resolvers, and the main orchestrator
   return {
@@ -58,6 +75,7 @@ const loadDictGenGen = (isSubgraph: boolean) => (
     [prefixHandle('resolvers')]: { instance: resolvers },
     [prefixHandle('loaderHandles')]: { instance: loaderHandles },
     [prefixHandle('isSubgraph')]: { instance: isSubgraph },
+    [prefixHandle('middlewareConfig')]: { instance: middlewareConfig },
     // The main orchestrator that loads everything
     apolloServer: {
       instance: 'load everything',

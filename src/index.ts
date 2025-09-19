@@ -94,6 +94,13 @@ export {
   type PrefixedHandles,
 };
 
+// Export middleware types
+export type {
+  MiddlewareAttacher,
+  MiddlewareConfig,
+  MiddlewarePathConfig,
+} from './types/middleware';
+
 // Export new auth-related functionality
 export {
   // Session Service

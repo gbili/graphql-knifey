@@ -2,19 +2,21 @@ import { LoadDictElement } from 'di-why/build/src/DiContainer';
 import cookieParser from 'cookie-parser';
 import type { Application } from '../app';
 import { prefixValue, retunDepsInjectDecustomizedHandle } from '../../utils/prefixHandle';
+import { MiddlewareAttacher } from '../../types/middleware';
 
-const loadDictElement: LoadDictElement<string> = {
+const loadDictElement: LoadDictElement<MiddlewareAttacher> = {
   before: retunDepsInjectDecustomizedHandle('appConfig'),
   factory({ app, appConfig }: { app: Application; appConfig: any }) {
-    const { graphqlPath, cookieSecret } = appConfig;
+    const { cookieSecret } = appConfig;
 
-    // Parse cookies (signed if secret is provided)
-    app.use(
-      graphqlPath,
-      cookieSecret ? cookieParser(cookieSecret) : cookieParser()
-    );
-
-    return 'apolloCookieParserMiddleware';
+    // Return a function that attaches the middleware when called
+    return (path: string) => {
+      // Parse cookies (signed if secret is provided)
+      app.use(
+        path,
+        cookieSecret ? cookieParser(cookieSecret) : cookieParser()
+      );
+    };
   },
   locateDeps: {
     app: 'app',

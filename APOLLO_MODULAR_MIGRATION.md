@@ -27,14 +27,16 @@ apolloStandaloneServer.ts
 ### After (Modular)
 ```
 loaders/
-├── apolloBase.ts                    # Base Apollo Server instance
-├── apolloServer.ts                  # Apollo Server configuration
-├── apolloMiddlewareLoader.ts        # Orchestrates all middleware
+├── apolloStandaloneServer.ts        # Standalone Apollo Server instance
+├── apolloSubgraphServer.ts          # Subgraph Apollo Server instance
+├── expressLauncher.ts               # Orchestrates middleware & starts server
+├── httpServer.ts                    # HTTP server wrapper for Express
+├── app.ts                          # Express application instance
 ├── apolloPlugins/
 │   ├── landingPagePlugin.ts        # GraphQL Playground/Disabled
 │   └── httpDrainPlugin.ts          # HTTP connection draining
-└── apolloMiddlewares/
-    ├── trustProxyMiddleware.ts      # Trust reverse proxies
+└── expressMiddlewares/              # Generic Express middlewares
+    ├── trustProxyMiddleware.ts      # Trust reverse proxies (global)
     ├── corsMiddleware.ts            # CORS configuration
     ├── cookieParserMiddleware.ts    # Cookie parsing
     ├── bodyParserMiddleware.ts      # JSON body parsing
@@ -64,14 +66,13 @@ const resolvers = {
 };
 
 // Generate the LoadDict with all necessary loaders
-const apolloLoaders: LoadDict = apolloStandaloneServerModularLDEGen(
+const apolloLoaders: LoadDict = apolloStandaloneServerModularLDGen(
   resolvers,
   typeDefs,
-  {
-    appConfig: 'appConfig',
-    apolloContext: 'apolloContext',
-    logger: 'logger'
-  }
+  // Optional: custom loader handles (defaults to standard ones)
+  customLoaderHandles,
+  // Optional: custom middleware configuration
+  middlewareConfig
 );
 
 // Add to your DI container
@@ -81,51 +82,63 @@ const injectionDict: LoadDict = {
 };
 
 // Load the fully configured server
-await di.load('apolloStandaloneServerModular');
+await di.load('apolloServer');
 ```
 
-### Customizing Middleware Loading Order
+### Customizing Middleware Configuration
 
-In your appConfig:
+The new architecture uses a path-based middleware configuration with priorities:
 
 ```typescript
-export default {
-  // ... other config
-  
-  // Optional: customize middleware loading order
-  apolloMiddlewaresList: [
-    'apolloTrustProxyMiddleware',
-    'apolloCorsMiddleware',
-    'apolloCookieParserMiddleware',
-    'apolloBodyParserMiddleware',
-    'apolloGraphqlMiddleware',
-    'apolloHealthCheckMiddleware',
+import { MiddlewarePathConfig } from 'graphql-knifey';
+
+const middlewareConfig: MiddlewarePathConfig = {
+  '/graphql': [
+    { name: 'expressTrustProxyMiddleware', priority: 100 },  // Highest priority
+    { name: 'expressCorsMiddleware', priority: 90 },
+    { name: 'expressCookieParserMiddleware', priority: 80 },
+    { name: 'expressBodyParserMiddleware', priority: 70 },
+    { name: 'expressGraphqlMiddleware', required: true, priority: -100 }, // Always last
     // Add your custom middleware here
-    'myCustomMiddleware'
+    { name: 'myCustomMiddleware', priority: 60 }
+  ],
+  '/healthz': [
+    { name: 'expressHealthCheckMiddleware', priority: 0 }
+  ],
+  '/metrics': [
+    { name: 'myMetricsMiddleware', priority: 0 }
   ]
 };
+
+// Pass to the loader generator
+const apolloLoaders = apolloStandaloneServerModularLDGen(
+  resolvers,
+  typeDefs,
+  undefined, // use default loader handles
+  middlewareConfig
+);
 ```
 
 ### Adding Custom Middleware
 
-Create a new middleware loader:
+Middlewares now return functions that accept a path parameter:
 
 ```typescript
-// loaders/apolloMiddlewares/myCustomMiddleware.ts
+// loaders/expressMiddlewares/myCustomMiddleware.ts
 import { LoadDictElement } from 'di-why/build/src/DiContainer';
 import type { Application } from '../app';
+import { MiddlewareAttacher } from 'graphql-knifey';
 
-const loadDictElement: LoadDictElement<string> = {
+const loadDictElement: LoadDictElement<MiddlewareAttacher> = {
   factory({ app, appConfig }: { app: Application; appConfig: any }) {
-    const { graphqlPath } = appConfig;
-    
-    app.use(graphqlPath, (req, res, next) => {
-      // Your custom middleware logic
-      console.log('Custom middleware executed');
-      next();
-    });
-    
-    return 'myCustomMiddleware';
+    // Return a function that attaches the middleware when called
+    return (path: string) => {
+      app.use(path, (req, res, next) => {
+        // Your custom middleware logic
+        console.log(`Custom middleware executed on ${path}`);
+        next();
+      });
+    };
   },
   locateDeps: {
     app: 'app',
@@ -165,9 +178,9 @@ await di.load('apolloServer');
 
 ### After
 ```typescript
-const apolloLoaders = apolloStandaloneServerModularLDEGen(resolvers, typeDefs);
+const apolloLoaders = apolloStandaloneServerModularLDGen(resolvers, typeDefs);
 Object.assign(injectionDict, apolloLoaders);
-await di.load('apolloStandaloneServerModular');
+await di.load('apolloServer');  // Note: loads through expressLauncher
 ```
 
 ## Testing Individual Components
@@ -176,17 +189,42 @@ Each component can now be tested in isolation:
 
 ```typescript
 // Test CORS middleware independently
-const corsMiddleware = await di.load('apolloCorsMiddleware');
+const corsMiddleware = await di.load('expressCorsMiddleware');
+corsMiddleware('/api');  // Attach to a path
 
 // Test context creation separately
-const graphqlMiddleware = await di.load('apolloGraphqlMiddleware');
+const graphqlMiddleware = await di.load('expressGraphqlMiddleware');
+graphqlMiddleware('/graphql');  // Attach to GraphQL path
 ```
 
 ## Benefits of the Modular Approach
 
 1. **Clean Code**: Each loader has a single responsibility
 2. **No process.env Access**: Configuration comes through DI
-3. **Flexibility**: Easy to add, remove, or reorder middleware
-4. **Debugging**: Clear understanding of middleware execution order
-5. **Reusability**: Middleware can be shared across different server configurations
-6. **Type Safety**: Full TypeScript support with proper typing
+3. **Path-based Configuration**: Middlewares can be attached to different paths
+4. **Priority System**: Explicit control over middleware loading order
+5. **Required vs Optional**: Mark critical middlewares as required
+6. **Reusability**: Middleware functions can be attached to multiple paths
+7. **Type Safety**: Full TypeScript support with proper typing
+
+## Key Architecture Changes
+
+### Middleware as Functions
+Middlewares now return `MiddlewareAttacher` functions that accept a path:
+- Allows attaching the same middleware to multiple paths
+- Clear separation between middleware creation and attachment
+- More flexible than hardcoded paths
+
+### Express Launcher
+The `expressLauncher` orchestrates the entire server setup:
+1. Loads middlewares based on configuration
+2. Sorts by priority (higher priority loads first)
+3. Attaches each to its configured path
+4. Starts the HTTP server
+5. Provides appropriate logging
+
+### Separation of Concerns
+- `httpServer`: Just creates the HTTP server
+- `expressLauncher`: Orchestrates and starts everything
+- `expressGraphqlMiddleware`: Handles Apollo-specific setup
+- Other middlewares: Focus on their specific functionality

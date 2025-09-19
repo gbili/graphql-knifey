@@ -8,6 +8,7 @@ import { makeCookieHelpers } from '../../utils/cookieHelper';
 import { prefixValue } from '../../utils/prefixHandle';
 import { ApolloServerConfigParams } from '../apolloSubgraphServer';
 import { CustomizableLoaderHandles } from '../../utils/loadDictGenerator/customizableLoaderHandles';
+import { MiddlewareAttacher } from '../../types/middleware';
 
 export type PublicGraphContext = {
   req: Request;
@@ -24,7 +25,7 @@ export type PublicGraphContext = {
   [k: string]: any;
 };
 
-const loadDictElement: LoadDictElement<string> = {
+const loadDictElement: LoadDictElement<MiddlewareAttacher> = {
   // IMPORTANT, this is where we load apolloServer
   before: async ({ serviceLocator, deps: { loaderHandles, isSubgraph, app, apolloContext, logger } }) => {
     const apolloServerHandle = isSubgraph ? `apolloSubgraphServer` : 'apolloStandaloneServer';
@@ -63,7 +64,6 @@ const loadDictElement: LoadDictElement<string> = {
     isSubgraph?: boolean;
   }) {
     const {
-      graphqlPath,
       cookieDomain,
       nodeEnv,
       accessCookieName = 'sid',
@@ -71,9 +71,14 @@ const loadDictElement: LoadDictElement<string> = {
       secureCookies
     } = appConfig;
 
-    app.use(
-      graphqlPath,
-      expressMiddleware(apolloServer, {
+    // Return a function that attaches the middleware when called
+    return (path: string) => {
+      // Log GraphQL-specific information
+      logger.log(`✅ Apollo ${isSubgraph ? 'Subgraph' : 'Standalone'} server configured at ${path}`);
+
+      app.use(
+        path,
+        expressMiddleware(apolloServer, {
         context: async ({ req, res }): Promise<PublicGraphContext> => {
           logger.log('[APOLLO DEBUG] Context creation started');
           logger.log('[APOLLO DEBUG] Is subgraph:', isSubgraph);
@@ -173,8 +178,7 @@ const loadDictElement: LoadDictElement<string> = {
         },
       })
     );
-
-    return 'apolloGraphqlMiddleware';
+    };
   },
 };
 

@@ -5,7 +5,7 @@ import appConfigMapMergerLDE from './appConfigMapMerger';
 import { LoadDict } from "di-why/build/src/DiContainer";
 import expressLauncher from "./expressLauncher";
 import apolloPluginsDict from "./apolloPlugins";
-import * as apolloMiddlewares from "./apolloMiddlewares";
+import * as expressMiddlewares from "./expressMiddlewares";
 import loaderHandles from "./loaderHandles";
 import { prefixHandle } from "../utils/prefixHandle";
 import app from "./app";
@@ -29,7 +29,7 @@ export const loadDict: LoadDict = {
   apolloStandaloneServer,
   ...apolloPluginsDict, // available plugins
   apolloPlugins: list, // loader for selection of plugins used by ApolloServer
-  ...apolloMiddlewares, //available middlewares loaders
+  ...expressMiddlewares, //available express middlewares loaders
   // if you call this
   [prefixHandle('expressLauncher')]: expressLauncher,
 };
