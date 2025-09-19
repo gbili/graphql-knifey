@@ -61,12 +61,21 @@ const DEFAULT_MIDDLEWARE_CONFIG: MiddlewarePathConfig = {
  * This replaces the monolithic apolloSubgraphServer approach while maintaining
  * subgraph-specific requirements (disabled landing page, no CSRF, etc.)
  */
-const loadDictGenGen = (isSubgraph: boolean) => (
-  resolvers: Resolvers<any>,
-  typeDefs: ReturnType<typeof gql>,
-  loaderHandles: LocatorHandles = customizableLoaderHandles,
-  middlewareConfig: MiddlewarePathConfig = DEFAULT_MIDDLEWARE_CONFIG
-): LoadDict => {
+// Named parameters for better API
+export type LoadDictGenParams = {
+  resolvers: Resolvers<any>;
+  typeDefs: ReturnType<typeof gql>;
+  loaderHandles?: LocatorHandles;
+  middlewareConfig?: MiddlewarePathConfig;
+};
+
+const loadDictGenGen = (isSubgraph: boolean) => (params: LoadDictGenParams): LoadDict => {
+  const {
+    resolvers,
+    typeDefs,
+    loaderHandles = customizableLoaderHandles,
+    middlewareConfig = DEFAULT_MIDDLEWARE_CONFIG
+  } = params;
   // Return a LoadDict with loaders for typeDefs, resolvers, and the main orchestrator
   return {
     ...loadDict,

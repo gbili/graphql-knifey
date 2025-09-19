@@ -62,6 +62,7 @@ export type {
   ApolloSubgraphServerConfigParam,
   LocatorHandles as ApolloLocatorHandles,
   Resolvers as ApolloResolvers,
+  LoadDictGenParams,
 } from './utils/loadDictGenerator/apolloServerModular';
 
 export type {
