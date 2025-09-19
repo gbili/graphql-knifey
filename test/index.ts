@@ -5,7 +5,7 @@ try {
   (async function () {
     try {
       const di = new DiContainer({ load: loadDict });
-      await di.load('apolloPullTogetherAndListen');
+      await di.load('expressLauncher');
     } catch (err) {
       throw err;
     }

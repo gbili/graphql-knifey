@@ -3,7 +3,7 @@ import events from "./events";
 import { logger } from "saylo";
 import appConfigMapMergerLDE from './appConfigMapMerger';
 import { LoadDict } from "di-why/build/src/DiContainer";
-import apolloPullTogetherAndListen from "./apolloPullTogetherAndListen";
+import expressLauncher from "./expressLauncher";
 import apolloPluginsDict from "./apolloPlugins";
 import * as apolloMiddlewares from "./apolloMiddlewares";
 import loaderHandles from "./loaderHandles";
@@ -31,5 +31,5 @@ export const loadDict: LoadDict = {
   apolloPlugins: list, // loader for selection of plugins used by ApolloServer
   ...apolloMiddlewares, //available middlewares loaders
   // if you call this
-  [prefixHandle('apolloPullTogetherAndListen')]: apolloPullTogetherAndListen,
+  [prefixHandle('expressLauncher')]: expressLauncher,
 };

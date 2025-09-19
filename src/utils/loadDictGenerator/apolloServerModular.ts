@@ -62,7 +62,7 @@ const loadDictGenGen = (isSubgraph: boolean) => (
     apolloServer: {
       instance: 'load everything',
       locateDeps: {
-        ...prefixValue('apolloPullTogetherAndListen'),
+        ...prefixValue('expressLauncher'),
       }
     }
   };

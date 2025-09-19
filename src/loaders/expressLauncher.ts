@@ -25,7 +25,7 @@ const loadDictElement: LoadDictElement<string> = {
     // Load all middleware in order
     for (const key of middlewareList) {
       // they hook themselves to express app
-      await serviceLocator.get(key);
+      await serviceLocator.load(key);
     }
 
     // IMPORTANT: responsible for creating apolloServer

@@ -6,15 +6,14 @@ import { retunDepsInjectDecustomizedHandle, prefixValue } from '../../utils/pref
 const loadDictElement: LoadDictElement<string> = {
   before: retunDepsInjectDecustomizedHandle('appConfig'),
   factory({ app, appConfig, isSubgraph }: { app: Application; appConfig: any; isSubgraph?: boolean }) {
-    const { graphqlPath, corsAllowedOrigin, corsCredentials = true, nodeEnv, enableDevCors } = appConfig;
+    const { graphqlPath, corsAllowedOrigin, corsCredentials = true } = appConfig;
 
     if (!isSubgraph && !corsAllowedOrigin) {
       console.warn('WARNING: when standalone server pass .env:CORS_ALLOWED_ORIGIN=...');
     }
 
     // Subgraphs should not have CORS by default (server-to-server communication)
-    // Only enable for local development if explicitly requested or if Public Graph
-    if ((!isSubgraph || (nodeEnv !== 'production' && enableDevCors)) && corsAllowedOrigin) {
+    if (!isSubgraph && corsAllowedOrigin) {
       app.use(
         graphqlPath,
         cors({
