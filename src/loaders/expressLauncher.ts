@@ -28,8 +28,10 @@ const loadDictElement: LoadDictElement<string> = {
         if (config.enabled !== false) {  // Skip if explicitly disabled
           try {
             const attachMiddleware = await serviceLocator.get<MiddlewareAttacher>(config.name);
-            attachMiddleware(path);
-            logger.log(`Attached middleware ${config.name} to ${path}`);
+            // Pass the path directly - middlewares will handle '*' for global
+            attachMiddleware(path as string | '*');
+            const pathDisplay = path === '*' ? 'globally' : `to ${path}`;
+            logger.log(`Attached middleware ${config.name} ${pathDisplay}`);
           } catch (error) {
             if (config.required) {
               throw new Error(`Required middleware ${config.name} could not be loaded: ${error}`);

@@ -1,5 +1,6 @@
 // Type for middleware that can be attached to Express at a specific path
-export type MiddlewareAttacher = (path: string) => void;
+// Use '*' for global middleware (no path)
+export type MiddlewareAttacher = (path: string | '*') => void;
 
 // Configuration for a single middleware
 export type MiddlewareConfig = {

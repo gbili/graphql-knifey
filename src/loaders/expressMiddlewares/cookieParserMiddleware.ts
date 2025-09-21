@@ -10,12 +10,17 @@ const loadDictElement: LoadDictElement<MiddlewareAttacher> = {
     const { cookieSecret } = appConfig;
 
     // Return a function that attaches the middleware when called
-    return (path: string) => {
+    return (path: string | '*') => {
+      const middleware = cookieSecret ? cookieParser(cookieSecret) : cookieParser();
+
       // Parse cookies (signed if secret is provided)
-      app.use(
-        path,
-        cookieSecret ? cookieParser(cookieSecret) : cookieParser()
-      );
+      if (path === '*') {
+        // Global middleware - no path
+        app.use(middleware);
+      } else {
+        // Path-specific middleware
+        app.use(path, middleware);
+      }
     };
   },
   locateDeps: {

@@ -5,8 +5,12 @@ import { MiddlewareAttacher } from '../../types/middleware';
 const loadDictElement: LoadDictElement<MiddlewareAttacher> = {
   factory({ app }: { app: Application }) {
     // Return a function that attaches the middleware when called
-    return (path: string) => {
+    return (path: string | '*') => {
       // Health check endpoint - path parameter is used as the route
+      // Note: This middleware doesn't support '*' as it needs a specific path
+      if (path === '*') {
+        throw new Error('healthCheckMiddleware requires a specific path, not global');
+      }
       app.get(path, (_, res) => res.status(200).send('ok'));
     };
   },

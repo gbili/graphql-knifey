@@ -72,7 +72,11 @@ const loadDictElement: LoadDictElement<MiddlewareAttacher> = {
     } = appConfig;
 
     // Return a function that attaches the middleware when called
-    return (path: string) => {
+    return (path: string | '*') => {
+      // GraphQL middleware requires a specific path, not global
+      if (path === '*') {
+        throw new Error('graphqlMiddleware requires a specific path, not global');
+      }
       // Log GraphQL-specific information
       logger.log(`✅ Apollo ${isSubgraph ? 'Subgraph' : 'Standalone'} server configured at ${path}`);
 

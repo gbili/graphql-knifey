@@ -14,26 +14,31 @@ const loadDictElement: LoadDictElement<MiddlewareAttacher> = {
     }
 
     // Return a function that attaches the middleware when called
-    return (path: string) => {
+    return (path: string | '*') => {
       // Subgraphs should not have CORS by default (server-to-server communication)
       if (!isSubgraph && corsAllowedOrigin) {
-        app.use(
-          path,
-          cors({
-            origin: corsAllowedOrigin,
-            credentials: Boolean(!isSubgraph && corsCredentials), // Subgraphs don't need credentials
-            methods: ['GET', 'POST', 'OPTIONS'],
-            allowedHeaders: [
-              'Content-Type',
+        const corsMiddleware = cors({
+          origin: corsAllowedOrigin,
+          credentials: Boolean(!isSubgraph && corsCredentials), // Subgraphs don't need credentials
+          methods: ['GET', 'POST', 'OPTIONS'],
+          allowedHeaders: [
+            'Content-Type',
             'Authorization',
             'Apollo-Require-Preflight',
             'X-Requested-With',
             'X-CSRF-Token',
           ],
           maxAge: 86400,
-        })
-      );
-    }
+        });
+
+        if (path === '*') {
+          // Global middleware - no path
+          app.use(corsMiddleware);
+        } else {
+          // Path-specific middleware
+          app.use(path, corsMiddleware);
+        }
+      }
     };
   },
   locateDeps: {
