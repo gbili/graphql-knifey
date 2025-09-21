@@ -27,7 +27,7 @@ const loadDictElement: LoadDictElement<ReturnType<AppConfigMap>> = {
     ...prefixValue('loaderHandles'),
   },
   factory: function ({ userAppConfigMap }: { userAppConfigMap: AppConfigMap }) {
-    return mergeAppConfigMaps(userAppConfigMap)(appConfigMap);
+    return mergeAppConfigMaps(appConfigMap)(userAppConfigMap);
   },
 };
 
