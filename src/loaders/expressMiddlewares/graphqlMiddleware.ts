@@ -119,6 +119,8 @@ const loadDictElement: LoadDictElement<MiddlewareAttacher> = {
 
             logger.log('[CSRF DEBUG] CSRF cookie present:', !!csrfCookie);
             logger.log('[CSRF DEBUG] CSRF header present:', !!csrfHeader);
+            logger.log('[CSRF DEBUG] CSRF cookie value (first 10):', typeof csrfCookie === 'string' ? csrfCookie.substring(0, 10) : csrfCookie);
+            logger.log('[CSRF DEBUG] CSRF header value (first 10):', typeof csrfHeader === 'string' ? (csrfHeader as string).substring(0, 10) : csrfHeader);
             logger.log('[CSRF DEBUG] CSRF values match:', csrfCookie === csrfHeader);
 
             // Only enforce CSRF if we're using cookie-based auth
