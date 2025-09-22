@@ -23,7 +23,7 @@
     "graphql-tag": ">=2.12.0",
     "jwt-authorized": ">=2.0.0",
     "mysql-oh-wait": ">=0.19.10",
-    "mysql-oh-wait-utils": ">=0.4.6",
+    "mysql-oh-wait-utils": ">=0.4.7",
     "swiss-army-knifey": ">=1.30.0",
     "saylo": ">=0.5.0"
   },
