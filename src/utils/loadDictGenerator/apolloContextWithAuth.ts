@@ -7,7 +7,7 @@ import {
   AuthContextResult,
   AuthMode
 } from '../createAuthContext';
-import { GKAppConfigMap } from '../../config/appConfig';
+import { GKAppConfigMap } from '../../config/appConfigMap';
 
 export interface ApolloContextWithAuthConfig {
   authMode?: AuthMode;

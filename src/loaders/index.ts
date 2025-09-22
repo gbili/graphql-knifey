@@ -1,7 +1,7 @@
-import env from "./env";
+import 'dotenv/config';
+import { envLoader } from 'di-why/build/src/index';
 import events from "./events";
 import { logger } from "saylo";
-import appConfigMapMergerLDE from './appConfigMapMerger';
 import { LoadDict } from "di-why/build/src/DiContainer";
 import expressLauncher from "./expressLauncher";
 import apolloPluginsDict from "./apolloPlugins";
@@ -13,12 +13,13 @@ import httpServer from "./httpServer";
 import list from './apolloPlugins/list';
 import apolloSubgraphServer from "./apolloSubgraphServer";
 import apolloStandaloneServer from "./apolloStandaloneServer";
-import appConfig from "./appConfig";
+import gkAppConfigMap from "../config/appConfigMap";
+import { appConfigLoader } from 'di-why/build/src/index';
+import gkAppConfigMapListAdd from "../utils/gkAppConfigMapListAdd";
 
 export const loadDict: LoadDict = {
-  [prefixHandle('appConfigMap')]: appConfigMapMergerLDE,
-  appConfig, // this will contain our appConfig and the user's appConfig merged thanks to appConfigMapMergerLDE
-  env,
+  appConfig: appConfigLoader,
+  env: envLoader,
   events,
   logger: { instance: logger },
   [prefixHandle('loaderHandles')]: loaderHandles,
@@ -32,4 +33,8 @@ export const loadDict: LoadDict = {
   ...expressMiddlewares, //available express middlewares loaders
   // if you call this
   [prefixHandle('expressLauncher')]: expressLauncher,
+  // graphql-knifey's own appConfigMap
+  [prefixHandle('gkAppConfigMap')]: { instance: gkAppConfigMap },
+  // appConfigMapNamespaces list (empty by default, consumers will add their namespaces)
+  appConfigMapNamespaces: gkAppConfigMapListAdd([]),
 };

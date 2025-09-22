@@ -1,4 +1,4 @@
-export type PrefixedHandles = 'loaderHandles' | 'resolvers' | 'typeDefs' | 'isSubgraph' | 'apolloPlugins' | 'expressLauncher' | 'appConfigMap' | 'middlewareConfig';
+export type PrefixedHandles = 'loaderHandles' | 'resolvers' | 'typeDefs' | 'isSubgraph' | 'apolloPlugins' | 'expressLauncher' | 'appConfigMap' | 'middlewareConfig' | 'gkAppConfigMap';
 
 export const customizableLoaderHandles = {
   appConfig: 'appConfig',

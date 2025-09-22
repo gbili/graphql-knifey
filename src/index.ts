@@ -2,14 +2,12 @@ import ctx from "./utils/loadDictGenerator/apolloContext";
 import subgraphServerLDE from "./loaders/apolloSubgraphServer";
 import loadDictGenGen from "./utils/loadDictGenerator/apolloServerModular";
 import standaloneServerLDE from "./loaders/apolloStandaloneServer";
-import cfg from "./loaders/appConfig";
 import deDoub from "./utils/deDoubleEscape";
 import lschem from "./utils/loadSchema";
 import { loadDict } from "./loaders";
 import { authenticateRequestAndPlugUserInInput as authenticateHelper } from "./utils/resolverAuthenticateHelper";
 import { getFailOutcomeFromError as getFOFE } from "./utils/getFailOutcomeFromError";
-import { mergeAppConfigMaps as acmMerger } from "./utils/mergeAppConfigMaps";
-import appConfigMap from "./config/appConfig";
+import gkAppConfigMapListAdd from "./utils/gkAppConfigMapListAdd";
 import {
   prefixHandle,
   prefixBoth,
@@ -70,18 +68,17 @@ export type {
   Resolvers as ApolloSubgraphResolvers,
 } from './utils/loadDictGenerator/apolloServerModular';
 
-export const appConfigLDEGen = cfg;
 
 export type { Application, GQLResolverDict, ActionOutcomeError, ActionOutcomeForbidden, ActionOutcomeSuccess, ActionOutcomeFail, ActionStatus, UUIDProp, UUID } from "./generalTypes";
 
 export const authenticateRequestAndPlugUserInInput = authenticateHelper;
 export const getFailOutcomeFromError = getFOFE;
-export const mergeToDefaultAppConfigMap = acmMerger(appConfigMap);
 
 export const deDoubleEscape = deDoub;
 export const loadSchema = lschem;
 
 export const graphqlKnifeyLoadDict = loadDict;
+export const gkAppConfigMapListAddFunc = gkAppConfigMapListAdd;
 
 // Export prefix utilities and types
 export {
