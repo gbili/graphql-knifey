@@ -8,6 +8,7 @@ import { loadDict } from "./loaders";
 import { authenticateRequestAndPlugUserInInput as authenticateHelper } from "./utils/resolverAuthenticateHelper";
 import { getFailOutcomeFromError as getFOFE } from "./utils/getFailOutcomeFromError";
 import gkAppConfigMapListAdd from "./utils/gkAppConfigMapListAdd";
+import gkMergeAppConfigMap from "./utils/gkMergeAppConfigMap";
 import {
   prefixHandle,
   prefixBoth,
@@ -78,7 +79,8 @@ export const deDoubleEscape = deDoub;
 export const loadSchema = lschem;
 
 export const graphqlKnifeyLoadDict = loadDict;
-export const gkAppConfigMapListAddFunc = gkAppConfigMapListAdd;
+export { gkAppConfigMapListAdd };
+export { gkMergeAppConfigMap };
 
 // Export prefix utilities and types
 export {
