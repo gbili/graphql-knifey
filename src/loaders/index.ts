@@ -35,6 +35,6 @@ export const loadDict: LoadDict = {
   [prefixHandle('expressLauncher')]: expressLauncher,
   // graphql-knifey's own appConfigMap
   [prefixHandle('gkAppConfigMap')]: { instance: gkAppConfigMap },
-  // appConfigMapNamespaces list (empty by default, consumers will add their namespaces)
+  // appConfigMapNamespaces list (empty by default, consumers will add their namespaces, by calling this)
   appConfigMapNamespaces: gkAppConfigMapListAdd([]),
 };
