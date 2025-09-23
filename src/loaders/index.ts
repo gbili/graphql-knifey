@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { envLoader } from 'di-why/build/src/index';
+import { appConfigMapListAdd, envLoader } from 'di-why/build/src/index';
 import events from "./events";
 import { logger } from "saylo";
 import { LoadDict } from "di-why/build/src/DiContainer";
@@ -15,7 +15,7 @@ import apolloSubgraphServer from "./apolloSubgraphServer";
 import apolloStandaloneServer from "./apolloStandaloneServer";
 import gkAppConfigMap from "../config/appConfigMap";
 import { appConfigLoader } from 'di-why/build/src/index';
-import gkAppConfigMapListAdd from "../utils/gkAppConfigMapListAdd";
+import gkAppConfigMapListAdd, { gkAppConfigMapNamespace } from "../utils/gkAppConfigMapListAdd";
 
 export const loadDict: LoadDict = {
   appConfig: appConfigLoader,
@@ -36,5 +36,5 @@ export const loadDict: LoadDict = {
   // graphql-knifey's own appConfigMap
   [prefixHandle('gkAppConfigMap')]: { instance: gkAppConfigMap },
   // appConfigMapNamespaces list (empty by default, consumers will add their namespaces, by calling this)
-  appConfigMapNamespaces: gkAppConfigMapListAdd([]),
+  appConfigMapNamespaces: { instance: gkAppConfigMapNamespace },
 };
