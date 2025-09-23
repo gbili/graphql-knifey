@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { addMergeableConfigMap, LoadDict } from 'di-why';
-import { expressLoadDict } from 'express-middleware-loader';
+import { expressLoadDict } from 'express-knifey';
 import apolloPluginsDict from "./apolloPlugins";
 import list from './apolloPlugins/list';
 import apolloSubgraphServer from "./apolloSubgraphServer";
@@ -10,7 +10,7 @@ import { gkAppConfigMapNamespace } from "../utils/gkAppConfigMapListAdd";
 import graphqlMiddleware from './expressMiddlewares/graphqlMiddleware';
 
 export const loadDict: LoadDict = {
-  // Start with the complete Express server foundation from express-middleware-loader
+  // Start with the complete Express server foundation from express-knifey
   ...expressLoadDict,
 
   // ApolloServer Both flavors in the loaders
@@ -23,6 +23,6 @@ export const loadDict: LoadDict = {
   // GraphQL middleware (only the GraphQL-specific one stays here)
   graphqlMiddleware,
 
-  // graphql-knifey's own appConfigMap (merges with express-middleware-loader's)
+  // graphql-knifey's own appConfigMap (merges with express-knifey's)
   ...addMergeableConfigMap(gkAppConfigMap, gkAppConfigMapNamespace),
 };

@@ -4,7 +4,7 @@ import type { ApolloServer } from '@apollo/server';
 import type { Logger } from 'saylo';
 import type { Request, Response, Application } from 'express';
 import { makeCookieHelpers } from '../../utils/cookieHelper';
-import { MiddlewareAttacher } from 'express-middleware-loader';
+import { MiddlewareAttacher } from 'express-knifey';
 
 export type PublicGraphContext = {
   req: Request;

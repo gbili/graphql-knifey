@@ -3,7 +3,7 @@ import { LoadDict } from 'di-why/build/src/DiContainer';
 import gql from 'graphql-tag';
 import { TypeWithoutUndefined, GraphQLResolverMap } from '../../generalTypes';
 import { loadDict } from '../../loaders';
-import { MiddlewarePathConfig } from 'express-middleware-loader';
+import { MiddlewarePathConfig } from 'express-knifey';
 
 // --- Types ----------------------------------------------------------
 

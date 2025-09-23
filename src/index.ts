@@ -69,12 +69,12 @@ export const graphqlKnifeyLoadDict = loadDict;
 export { gkAppConfigMapNamespace };
 export { gkMergeAppConfigMap };
 
-// Export middleware types from express-middleware-loader
+// Export middleware types from express-knifey
 export type {
   MiddlewareAttacher,
   MiddlewareConfig,
   MiddlewarePathConfig,
-} from 'express-middleware-loader';
+} from 'express-knifey';
 
 // Export new auth-related functionality
 export {
