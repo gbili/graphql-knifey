@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { envLoader } from 'di-why/build/src/index';
+import { addMergeableConfigMap, envLoader } from 'di-why/build/src/index';
 import events from "./events";
 import { logger } from "saylo";
 import { LoadDict } from "di-why/build/src/DiContainer";
@@ -34,7 +34,5 @@ export const loadDict: LoadDict = {
   // if you call this
   [prefixHandle('expressLauncher')]: expressLauncher,
   // graphql-knifey's own appConfigMap
-  [prefixHandle('gkAppConfigMap')]: { instance: gkAppConfigMap },
-  // appConfigMapNamespaces list (empty by default, consumers will add their namespaces, by calling this)
-  appConfigMapNamespaces: { instance: gkAppConfigMapNamespace },
+  ...addMergeableConfigMap(gkAppConfigMap, gkAppConfigMapNamespace),
 };
