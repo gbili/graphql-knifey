@@ -1,36 +1,28 @@
 import 'dotenv/config';
-import { addMergeableConfigMap, envLoader, appConfigLoader, LoadDict } from 'di-why';
-import events from "./events";
-import { logger } from "saylo";
-import expressLauncher from "./expressLauncher";
+import { addMergeableConfigMap, LoadDict } from 'di-why';
+import { expressLoadDict } from 'express-middleware-loader';
 import apolloPluginsDict from "./apolloPlugins";
-import * as expressMiddlewares from "./expressMiddlewares";
-import loaderHandles from "./loaderHandles";
-import { prefixHandle } from "../utils/prefixHandle";
-import app from "./app";
-import httpServer from "./httpServer";
 import list from './apolloPlugins/list';
 import apolloSubgraphServer from "./apolloSubgraphServer";
 import apolloStandaloneServer from "./apolloStandaloneServer";
 import gkAppConfigMap from "../config/appConfigMap";
 import { gkAppConfigMapNamespace } from "../utils/gkAppConfigMapListAdd";
+import graphqlMiddleware from './expressMiddlewares/graphqlMiddleware';
 
 export const loadDict: LoadDict = {
-  appConfig: appConfigLoader,
-  env: envLoader,
-  events,
-  logger: { instance: logger },
-  [prefixHandle('loaderHandles')]: loaderHandles,
-  app, // express
-  httpServer,
+  // Start with the complete Express server foundation from express-middleware-loader
+  ...expressLoadDict,
+
   // ApolloServer Both flavors in the loaders
   apolloSubgraphServer,
   apolloStandaloneServer,
+
+  // Apollo plugins
   ...apolloPluginsDict, // available plugins
   apolloPlugins: list, // loader for selection of plugins used by ApolloServer
-  ...expressMiddlewares, //available express middlewares loaders
-  // if you call this
-  [prefixHandle('expressLauncher')]: expressLauncher,
-  // graphql-knifey's own appConfigMap
+  // GraphQL middleware (only the GraphQL-specific one stays here)
+  graphqlMiddleware,
+
+  // graphql-knifey's own appConfigMap (merges with express-middleware-loader's)
   ...addMergeableConfigMap(gkAppConfigMap, gkAppConfigMapNamespace),
 };

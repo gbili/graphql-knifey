@@ -1,11 +1,9 @@
 import 'dotenv/config';
 import { LoadDict } from 'di-why/build/src/DiContainer';
 import gql from 'graphql-tag';
-import { prefixHandle, prefixValue } from '../prefixHandle';
-import { CustomizableLoaderHandles, customizableLoaderHandles } from './customizableLoaderHandles';
 import { TypeWithoutUndefined, GraphQLResolverMap } from '../../generalTypes';
 import { loadDict } from '../../loaders';
-import { MiddlewarePathConfig } from '../../types/middleware';
+import { MiddlewarePathConfig } from 'express-middleware-loader';
 
 // --- Types ----------------------------------------------------------
 
@@ -37,8 +35,6 @@ export type ApolloStandaloneServerConfigParams = ApolloServerConfigParams & {
   refreshCookieName?: string;         // default 'rid'
 };
 
-export type LocatorHandles = CustomizableLoaderHandles;
-
 // --- Middleware Configuration --------------------------------------
 
 const DEFAULT_MIDDLEWARE_CONFIG: MiddlewarePathConfig = {
@@ -65,33 +61,28 @@ const DEFAULT_MIDDLEWARE_CONFIG: MiddlewarePathConfig = {
 export type LoadDictGenParams = {
   resolvers: Resolvers<any>;
   typeDefs: ReturnType<typeof gql>;
-  loaderHandles?: LocatorHandles;
   middlewareConfig?: MiddlewarePathConfig;
 };
 
+/**
+ * To load it call di.load('expressLauncher')
+ * @param isSubgraph
+ * @returns
+ */
 const loadDictGenGen = (isSubgraph: boolean) => (params: LoadDictGenParams): LoadDict => {
   const {
     resolvers,
     typeDefs,
-    loaderHandles = customizableLoaderHandles,
     middlewareConfig = DEFAULT_MIDDLEWARE_CONFIG
   } = params;
   // Return a LoadDict with loaders for typeDefs, resolvers, and the main orchestrator
   return {
     ...loadDict,
     // Inject the typeDefs and resolvers as a new loader
-    [prefixHandle('typeDefs')]: { instance: typeDefs },
-    [prefixHandle('resolvers')]: { instance: resolvers },
-    [prefixHandle('loaderHandles')]: { instance: loaderHandles },
-    [prefixHandle('isSubgraph')]: { instance: isSubgraph },
-    [prefixHandle('middlewareConfig')]: { instance: middlewareConfig },
-    // The main orchestrator that loads everything
-    apolloServer: {
-      instance: 'load everything',
-      locateDeps: {
-        ...prefixValue('expressLauncher'),
-      }
-    }
+    typeDefs: { instance: typeDefs },
+    resolvers: { instance: resolvers },
+    isSubgraph: { instance: isSubgraph },
+    middlewareConfig: { instance: middlewareConfig },
   };
 }
 

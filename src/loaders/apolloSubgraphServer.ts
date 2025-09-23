@@ -2,12 +2,9 @@ import 'dotenv/config';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { TypeWithoutUndefined, GraphQLResolverMap } from '../generalTypes';
-import express from 'express';
-import { Application } from './app';
+import express, { Application } from 'express';
 import { GetInstanceType, LoadDictElement } from 'di-why/build/src/DiContainer';
 import { Logger } from 'saylo';
-import { prefixHandle, prefixValue } from '../utils/prefixHandle';
-import { CustomizableLoaderHandles } from '../utils/loadDictGenerator/customizableLoaderHandles';
 
 // Import buildSubgraphSchema lazily - will throw if @apollo/subgraph is not installed
 // This is intentional - users of apolloSubgraphServer must have @apollo/subgraph installed
@@ -39,9 +36,8 @@ export type LocatorHandles = { appConfig: string; apolloContext: string; logger:
 
 const loadDictElement: LoadDictElement<GetInstanceType<typeof ApolloServer>> = {
   before: async function ({ deps, serviceLocator }) {
-    const { httpDrainApolloPlugin, typeDefs, resolvers, loaderHandles, apolloPlugins, ...rest } = deps;
-    const { nodeEnv, graphqlIntrospection } =
-      await serviceLocator.get<ApolloServerConfigParams>((loaderHandles as CustomizableLoaderHandles).appConfig);
+    const { typeDefs, resolvers, loaderHandles, apolloPlugins, appConfig, ...rest } = deps;
+    const { nodeEnv, graphqlIntrospection } = appConfig;
 
     return {
       ...rest,
@@ -58,15 +54,14 @@ const loadDictElement: LoadDictElement<GetInstanceType<typeof ApolloServer>> = {
   },
   constructible: ApolloServer,
   locateDeps: {
-    ...prefixValue('typeDefs'),
-    ...prefixValue('resolvers'),
-    ...prefixValue('loaderHandles'),
+    appConfig: 'appConfig',
+    typeDefs: 'typeDefs',
+    resolvers: 'resolvers',
     apolloPlugins: 'apolloPlugins',
   },
   async after({ me: server, serviceLocator }) {
-    const lh = await serviceLocator.get<CustomizableLoaderHandles>(prefixHandle('loaderHandles'));
-    const contextFunction = await serviceLocator.get(lh.apolloContext);
-    const logger = await serviceLocator.get<Logger>(lh.logger);
+    const contextFunction = await serviceLocator.get('apolloContext');
+    const logger = await serviceLocator.get<Logger>('logger');
     const app = await serviceLocator.get<Application>('app');
 
     const {
@@ -74,7 +69,7 @@ const loadDictElement: LoadDictElement<GetInstanceType<typeof ApolloServer>> = {
       nodeEnv,
       enableDevCors = false,
       corsAllowedOrigin,
-    } = await serviceLocator.get<ApolloServerConfigParams>(lh.appConfig);
+    } = await serviceLocator.get<ApolloServerConfigParams>('appConfig');
 
     try {
       logger.log(`🚀 Starting Apollo (subgraph) 🚀`);

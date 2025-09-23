@@ -1,5 +1,4 @@
 import { LoadDictElement } from "di-why/build/src/DiContainer";
-import { prefixValue } from "../../utils/prefixHandle";
 import { ApolloServerPlugin } from "@apollo/server";
 
 const loadDictElement: LoadDictElement<ApolloServerPlugin[]> = {
@@ -15,7 +14,7 @@ const loadDictElement: LoadDictElement<ApolloServerPlugin[]> = {
     return loadedPluginsList;
   },
   locateDeps: {
-    ...prefixValue('isSubgraph'),
+    isSubgraph: 'isSubgraph',
   },
 }
 

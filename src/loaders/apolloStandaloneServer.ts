@@ -3,8 +3,6 @@ import { ApolloServer } from '@apollo/server';
 import type { GetInstanceType, LoadDictElement } from 'di-why/build/src/DiContainer';
 import type { Logger } from 'saylo';
 import { TypeWithoutUndefined } from '../generalTypes';
-import { prefixHandle, prefixValue } from '../utils/prefixHandle';
-import { CustomizableLoaderHandles } from '../utils/loadDictGenerator/customizableLoaderHandles';
 
 // --- Types ----------------------------------------------------------
 
@@ -52,9 +50,9 @@ export type PublicGraphContext = {
 // --- Loader ---------------------------------------------------------
 
 const loadDictElement: LoadDictElement<GetInstanceType<typeof ApolloServer>> = {
-  before: async function ({ deps, serviceLocator }) {
-    const { httpDrainApolloPlugin, typeDefs, resolvers, loaderHandles, apolloPlugins, ...rest } = deps;
-    const { nodeEnv, graphqlIntrospection } = await serviceLocator.get<ApolloServerConfigParams>((loaderHandles as CustomizableLoaderHandles).appConfig);
+  before: async function ({ deps }) {
+    const { typeDefs, resolvers, apolloPlugins, appConfig, ...rest } = deps;
+    const { nodeEnv, graphqlIntrospection } = appConfig;
 
     const isProd = nodeEnv === 'production';
 
@@ -68,16 +66,14 @@ const loadDictElement: LoadDictElement<GetInstanceType<typeof ApolloServer>> = {
     };
   },
   constructible: ApolloServer,
-  deps: {},
   locateDeps: {
-    ...prefixValue('typeDefs'),
-    ...prefixValue('resolvers'),
-    ...prefixValue('loaderHandles'),
+    appConfig: 'appConfig',
+    typeDefs: 'typeDefs',
+    resolvers: 'resolvers',
     apolloPlugins: 'apolloPlugins',
   },
   async after({ me: server, serviceLocator }) {
-    const lh = await serviceLocator.get<CustomizableLoaderHandles>(prefixHandle('loaderHandles'));
-    const logger = await serviceLocator.get<Logger>(lh.logger);
+    const logger = await serviceLocator.get<Logger>('logger');
 
     // Just start the server - all middleware is handled by the modular system
     logger.log(`🚀 Starting Apollo server 🚀`);

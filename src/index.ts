@@ -9,18 +9,6 @@ import { authenticateRequestAndPlugUserInInput as authenticateHelper } from "./u
 import { getFailOutcomeFromError as getFOFE } from "./utils/getFailOutcomeFromError";
 import { gkAppConfigMapNamespace } from "./utils/gkAppConfigMapListAdd";
 import gkMergeAppConfigMap from "./utils/gkMergeAppConfigMap";
-import {
-  prefixHandle,
-  prefixBoth,
-  prefixValue,
-  retunDepsInjectDecustomizedHandle
-} from "./utils/prefixHandle";
-import {
-  customizableLoaderHandles,
-  type CustomizableLoaderHandles,
-  type CustomizableLoaderHandlesKeys,
-  type PrefixedHandles
-} from "./utils/loadDictGenerator/customizableLoaderHandles";
 
 // New auth-related imports
 import sessionServiceLDEGen, { SessionService, SessionServiceInterface, SessionData } from "./services/SessionService";
@@ -59,7 +47,6 @@ export const apolloStandaloneServerModularLDGen = loadDictGenGen(false);
 // Export Apollo modular types
 export type {
   ApolloSubgraphServerConfigParam,
-  LocatorHandles as ApolloLocatorHandles,
   Resolvers as ApolloResolvers,
   LoadDictGenParams,
 } from './utils/loadDictGenerator/apolloServerModular';
@@ -82,24 +69,12 @@ export const graphqlKnifeyLoadDict = loadDict;
 export { gkAppConfigMapNamespace };
 export { gkMergeAppConfigMap };
 
-// Export prefix utilities and types
-export {
-  prefixHandle,
-  prefixBoth,
-  prefixValue,
-  retunDepsInjectDecustomizedHandle,
-  customizableLoaderHandles,
-  type CustomizableLoaderHandles,
-  type CustomizableLoaderHandlesKeys,
-  type PrefixedHandles,
-};
-
-// Export middleware types
+// Export middleware types from express-middleware-loader
 export type {
   MiddlewareAttacher,
   MiddlewareConfig,
   MiddlewarePathConfig,
-} from './types/middleware';
+} from 'express-middleware-loader';
 
 // Export new auth-related functionality
 export {

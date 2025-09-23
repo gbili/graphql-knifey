@@ -1,14 +1,10 @@
 import { LoadDictElement } from 'di-why/build/src/DiContainer';
 import { expressMiddleware } from '@apollo/server/express4';
 import type { ApolloServer } from '@apollo/server';
-import type { Application } from '../app';
 import type { Logger } from 'saylo';
-import type { Request, Response } from 'express';
+import type { Request, Response, Application } from 'express';
 import { makeCookieHelpers } from '../../utils/cookieHelper';
-import { prefixValue } from '../../utils/prefixHandle';
-import { ApolloServerConfigParams } from '../apolloSubgraphServer';
-import { CustomizableLoaderHandles } from '../../utils/loadDictGenerator/customizableLoaderHandles';
-import { MiddlewareAttacher } from '../../types/middleware';
+import { MiddlewareAttacher } from 'express-middleware-loader';
 
 export type PublicGraphContext = {
   req: Request;
@@ -27,7 +23,7 @@ export type PublicGraphContext = {
 
 const loadDictElement: LoadDictElement<MiddlewareAttacher> = {
   // IMPORTANT, this is where we load apolloServer
-  before: async ({ serviceLocator, deps: { loaderHandles, isSubgraph, app, apolloContext, logger } }) => {
+  before: async ({ serviceLocator, deps: { appConfig, isSubgraph, app, apolloContext, logger } }) => {
     const apolloServerHandle = isSubgraph ? `apolloSubgraphServer` : 'apolloStandaloneServer';
     if (!serviceLocator.couldLoad(apolloServerHandle)) {
       throw new Error(`With the current setup, there is now way to load an apolloServer instance. isSubgraph: ${isSubgraph}, trying to load: ${apolloServerHandle}`);
@@ -36,7 +32,7 @@ const loadDictElement: LoadDictElement<MiddlewareAttacher> = {
       app,
       apolloServer: await serviceLocator.get(apolloServerHandle),
       apolloContext,
-      appConfig: await serviceLocator.get<ApolloServerConfigParams>((loaderHandles as CustomizableLoaderHandles).appConfig),
+      appConfig,
       logger,
       isSubgraph,
     };
@@ -44,9 +40,9 @@ const loadDictElement: LoadDictElement<MiddlewareAttacher> = {
   locateDeps: {
     app: 'app',
     apolloContext: 'apolloContext',
+    appConfig: 'appConfig',
     logger: 'logger',
-    ...prefixValue('loaderHandles'),
-    ...prefixValue('isSubgraph'),
+    isSubgraph: 'isSubgraph',
   },
   factory({
     app,

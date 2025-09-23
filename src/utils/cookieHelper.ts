@@ -14,7 +14,7 @@ export function makeCookieHelpers(
   // In development with HTTP, we can't use secure cookies
   // If secureCookies is explicitly set, use that, otherwise default based on environment
   const useSecure = secureCookies !== undefined ? secureCookies : isProd;
-  
+
   const base = {
     httpOnly: true,
     sameSite: useSecure ? 'none' as const : 'lax' as const,  // 'none' requires secure, 'lax' for dev
@@ -38,7 +38,7 @@ export function makeCookieHelpers(
     console.log('[COOKIE DEBUG] sessionId provided:', !!sessionId);
     console.log('[COOKIE DEBUG] refreshId provided:', !!refreshId);
     console.log('[COOKIE DEBUG] Cookie base options:', base);
-    
+
     if (sessionId != null) {
       const sessionOptions = { ...base, maxAge: sessionMaxAgeSec * 1000 };
       console.log('[COOKIE DEBUG] Setting session cookie:', accessName, 'with options:', sessionOptions);
@@ -53,7 +53,7 @@ export function makeCookieHelpers(
       res.cookie(refreshName, refreshId, refreshOptions);
       console.log('[COOKIE DEBUG] Refresh cookie set');
     }
-    
+
     if (!sessionId && !refreshId) {
       console.log('[COOKIE DEBUG] WARNING: setAuthCookies called but no IDs provided!');
     }

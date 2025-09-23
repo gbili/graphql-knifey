@@ -13,21 +13,27 @@
     "@apollo/server-plugin-landing-page-graphql-playground": ">=4.0.0",
     "@apollo/subgraph": ">=2.0.0",
     "@types/node": ">=18.0.0",
-    "@types/cors": ">=2.8.0",
-    "@types/cookie-parser": ">=1.4.0",
-    "cookie-parser": ">=1.4.0",
-    "cors": ">=2.8.0",
     "di-why": ">=0.20.0",
     "dotenv": ">=16.0.0",
     "express": ">=4.0.0",
+    "express-middleware-loader": "^1.0.0",
     "graphql-tag": ">=2.12.0",
     "jwt-authorized": ">=2.0.0",
     "swiss-army-knifey": ">=1.30.0",
     "saylo": ">=0.5.0"
   },
   "peerDependenciesMeta": {
+    "@apollo/server": {
+      "optional": true
+    },
+    "@apollo/server-plugin-landing-page-graphql-playground": {
+      "optional": true
+    },
     "@apollo/subgraph": {
       "optional": true
+    },
+    "express-middleware-loader": {
+      "optional": false
     }
   }
 }

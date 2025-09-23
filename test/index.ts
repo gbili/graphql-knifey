@@ -1,6 +1,5 @@
 import DiContainer, { mergeLDs } from 'di-why';
 import { loadDict } from '../src/loaders';
-import { prefixHandle } from '../src/utils/prefixHandle';
 
 (async function () {
   try {
@@ -8,7 +7,7 @@ import { prefixHandle } from '../src/utils/prefixHandle';
     const testLoadDict = mergeLDs(
       loadDict,
       {
-        [prefixHandle('middlewareConfig')]: {
+        middlewareConfig: {
           instance: {
             '/graphql': []  // Empty middleware config for test
           }
@@ -19,7 +18,7 @@ import { prefixHandle } from '../src/utils/prefixHandle';
     const di = new DiContainer({ load: testLoadDict });
 
     // Test that we can build the TypeScript code and load the dependencies
-    await di.load(prefixHandle('expressLauncher'));
+    await di.load('expressLauncher');
 
     // Get the HTTP server to shut it down properly
     const httpServer = await di.get('httpServer');
