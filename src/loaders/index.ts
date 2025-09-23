@@ -1,8 +1,7 @@
 import 'dotenv/config';
-import { addMergeableConfigMap, envLoader } from 'di-why/build/src/index';
+import { addMergeableConfigMap, envLoader, appConfigLoader, LoadDict } from 'di-why';
 import events from "./events";
 import { logger } from "saylo";
-import { LoadDict } from "di-why/build/src/DiContainer";
 import expressLauncher from "./expressLauncher";
 import apolloPluginsDict from "./apolloPlugins";
 import * as expressMiddlewares from "./expressMiddlewares";
@@ -14,7 +13,6 @@ import list from './apolloPlugins/list';
 import apolloSubgraphServer from "./apolloSubgraphServer";
 import apolloStandaloneServer from "./apolloStandaloneServer";
 import gkAppConfigMap from "../config/appConfigMap";
-import { appConfigLoader } from 'di-why/build/src/index';
 import { gkAppConfigMapNamespace } from "../utils/gkAppConfigMapListAdd";
 
 export const loadDict: LoadDict = {
