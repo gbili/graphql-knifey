@@ -9,6 +9,8 @@ import gkAppConfigMap from "../config/appConfigMap";
 import { gkAppConfigMapNamespace } from "../utils/gkAppConfigMapListAdd";
 import graphqlMiddleware from './expressMiddlewares/graphqlMiddleware';
 
+export const graphqlMiddlewareKey = 'expressGraphqlMiddleware';
+
 export const loadDict: LoadDict = {
   // Start with the complete Express server foundation from express-knifey
   ...expressLoadDict,
@@ -21,7 +23,7 @@ export const loadDict: LoadDict = {
   ...apolloPluginsDict, // available plugins
   apolloPlugins: list, // loader for selection of plugins used by ApolloServer
   // GraphQL middleware (only the GraphQL-specific one stays here)
-  graphqlMiddleware,
+  [graphqlMiddlewareKey]: graphqlMiddleware,
 
   // graphql-knifey's own appConfigMap (merges with express-knifey's)
   ...addMergeableConfigMap(gkAppConfigMap, gkAppConfigMapNamespace),

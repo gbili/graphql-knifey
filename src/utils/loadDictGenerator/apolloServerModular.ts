@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { LoadDict } from 'di-why/build/src/DiContainer';
 import gql from 'graphql-tag';
 import { TypeWithoutUndefined, GraphQLResolverMap } from '../../generalTypes';
-import { loadDict } from '../../loaders';
+import { loadDict, graphqlMiddlewareKey } from '../../loaders';
 import { MiddlewarePathConfig } from 'express-knifey';
 
 // --- Types ----------------------------------------------------------
@@ -43,7 +43,7 @@ const DEFAULT_MIDDLEWARE_CONFIG: MiddlewarePathConfig = {
     { name: 'expressCorsMiddleware', priority: 90 },
     { name: 'expressCookieParserMiddleware', priority: 80 },
     { name: 'expressBodyParserMiddleware', priority: 70 },
-    { name: 'expressGraphqlMiddleware', required: true, priority: -100 }, // Must be last
+    { name: graphqlMiddlewareKey, required: true, priority: -100 }, // Must be last
   ],
   '/healthz': [
     { name: 'expressHealthCheckMiddleware', priority: 0 },
