@@ -79,7 +79,7 @@ export type {
 export {
   GRAPHQL_MIDDLEWARE,
   createGraphqlMiddlewareConfig,
-  graphqlMiddlewareKey,
+  graphqlMiddlewareHandle,
 } from './middleware';
 
 export type {

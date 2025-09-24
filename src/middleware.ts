@@ -100,6 +100,6 @@ export const createGraphqlMiddlewareConfig = (
   return buildMiddlewareConfig(paths);
 };
 
-export const graphqlMiddlewareKey = GRAPHQL_MIDDLEWARE.graphql.name;
+export const graphqlMiddlewareHandle = GRAPHQL_MIDDLEWARE.graphql.name;
 
 export type { MiddlewareHandle } from 'express-knifey';

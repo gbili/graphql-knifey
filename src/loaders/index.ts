@@ -8,9 +8,7 @@ import apolloStandaloneServer from "./apolloStandaloneServer";
 import gkAppConfigMap from "../config/appConfigMap";
 import { gkAppConfigMapNamespace } from "../utils/gkAppConfigMapListAdd";
 import graphqlMiddleware from './expressMiddlewares/graphqlMiddleware';
-import { graphqlMiddlewareKey as graphqlMiddlewareHandle } from '../middleware';
-
-export { graphqlMiddlewareKey } from '../middleware';
+import { graphqlMiddlewareHandle } from '../middleware';
 
 export const loadDict: LoadDict = {
   // Start with the complete Express server foundation from express-knifey
@@ -29,5 +27,3 @@ export const loadDict: LoadDict = {
   // graphql-knifey's own appConfigMap (merges with express-knifey's)
   ...addMergeableConfigMap(gkAppConfigMap, gkAppConfigMapNamespace),
 };
-
-export { graphqlMiddlewareHandle as graphqlMiddlewareKey };
