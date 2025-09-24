@@ -2,7 +2,8 @@ import 'dotenv/config';
 import { LoadDict } from 'di-why/build/src/DiContainer';
 import gql from 'graphql-tag';
 import { TypeWithoutUndefined, GraphQLResolverMap } from '../../generalTypes';
-import { loadDict, graphqlMiddlewareKey } from '../../loaders';
+import { loadDict } from '../../loaders';
+import { createGraphqlMiddlewareConfig } from '../../middleware';
 import { MiddlewarePathConfig } from 'express-knifey';
 
 // --- Types ----------------------------------------------------------
@@ -37,18 +38,7 @@ export type ApolloStandaloneServerConfigParams = ApolloServerConfigParams & {
 
 // --- Middleware Configuration --------------------------------------
 
-const DEFAULT_MIDDLEWARE_CONFIG: MiddlewarePathConfig = {
-  '/graphql': [
-    { name: 'expressTrustProxyMiddleware', priority: 100 },  // Must be first for correct IPs
-    { name: 'expressCorsMiddleware', priority: 90 },
-    { name: 'expressCookieParserMiddleware', priority: 80 },
-    { name: 'expressBodyParserMiddleware', priority: 70 },
-    { name: graphqlMiddlewareKey, required: true, priority: -100 }, // Must be last
-  ],
-  '/healthz': [
-    { name: 'expressHealthCheckMiddleware', priority: 0 },
-  ],
-};
+const DEFAULT_MIDDLEWARE_CONFIG: MiddlewarePathConfig = createGraphqlMiddlewareConfig();
 
 // --- Loader ---------------------------------------------------------
 

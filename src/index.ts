@@ -76,6 +76,17 @@ export type {
   MiddlewarePathConfig,
 } from 'express-knifey';
 
+export {
+  GRAPHQL_MIDDLEWARE,
+  createGraphqlMiddlewareConfig,
+  graphqlMiddlewareKey,
+} from './middleware';
+
+export type {
+  GraphqlMiddlewareConfigOptions,
+  GraphqlMiddlewareHandle,
+} from './middleware';
+
 // Export new auth-related functionality
 export {
   // Session Service
