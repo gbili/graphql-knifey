@@ -5,6 +5,7 @@ import apolloPluginsDict from "./apolloPlugins";
 import list from './apolloPlugins/list';
 import apolloSubgraphServer from "./apolloSubgraphServer";
 import apolloStandaloneServer from "./apolloStandaloneServer";
+import apolloGatewayServer from "./apolloGatewayServer";
 import gkAppConfigMap from "../config/appConfigMap";
 import { gkAppConfigMapNamespace } from "../utils/gkAppConfigMapListAdd";
 import graphqlMiddleware from './expressMiddlewares/graphqlMiddleware';
@@ -14,9 +15,10 @@ export const loadDict: LoadDict = {
   // Start with the complete Express server foundation from express-knifey
   ...expressLoadDict,
 
-  // ApolloServer Both flavors in the loaders
+  // ApolloServer all three flavors
   apolloSubgraphServer,
   apolloStandaloneServer,
+  apolloGatewayServer,
 
   // Apollo plugins
   ...apolloPluginsDict, // available plugins

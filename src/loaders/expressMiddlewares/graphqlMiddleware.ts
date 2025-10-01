@@ -24,10 +24,19 @@ export type PublicGraphContext = {
 const loadDictElement: LoadDictElement<MiddlewareAttacher> = {
   // IMPORTANT, this is where we load apolloServer
   before: async ({ serviceLocator, deps: { appConfig, isSubgraph, app, apolloContext, logger } }) => {
-    const apolloServerHandle = isSubgraph ? `apolloSubgraphServer` : 'apolloStandaloneServer';
+    // Determine which Apollo server type to load
+    const apolloServerHandle = (() => {
+      if (isSubgraph) return 'apolloSubgraphServer';
+      if (serviceLocator.couldLoad('apolloGatewayServer')) return 'apolloGatewayServer';
+      return 'apolloStandaloneServer';
+    })();
+
     if (!serviceLocator.couldLoad(apolloServerHandle)) {
-      throw new Error(`With the current setup, there is now way to load an apolloServer instance. isSubgraph: ${isSubgraph}, trying to load: ${apolloServerHandle}`);
+      throw new Error(`With the current setup, there is no way to load an apolloServer instance. isSubgraph: ${isSubgraph}, trying to load: ${apolloServerHandle}`);
     };
+
+    const isGateway = apolloServerHandle === 'apolloGatewayServer';
+
     return {
       app,
       apolloServer: await serviceLocator.get(apolloServerHandle),
@@ -35,6 +44,7 @@ const loadDictElement: LoadDictElement<MiddlewareAttacher> = {
       appConfig,
       logger,
       isSubgraph,
+      isGateway,
     };
   },
   locateDeps: {
@@ -50,7 +60,8 @@ const loadDictElement: LoadDictElement<MiddlewareAttacher> = {
     apolloContext,
     appConfig,
     logger,
-    isSubgraph
+    isSubgraph,
+    isGateway
   }: {
     app: Application;
     apolloServer: ApolloServer<any>;
@@ -58,6 +69,7 @@ const loadDictElement: LoadDictElement<MiddlewareAttacher> = {
     appConfig: any;
     logger: Logger;
     isSubgraph?: boolean;
+    isGateway?: boolean;
   }) {
     const {
       cookieDomain,
@@ -74,7 +86,8 @@ const loadDictElement: LoadDictElement<MiddlewareAttacher> = {
         throw new Error('graphqlMiddleware requires a specific path, not global');
       }
       // Log GraphQL-specific information
-      logger.log(`✅ Apollo ${isSubgraph ? 'Subgraph' : 'Standalone'} server configured at ${path}`);
+      const serverType = isSubgraph ? 'Subgraph' : (isGateway ? 'Gateway' : 'Standalone');
+      logger.log(`✅ Apollo ${serverType} server configured at ${path}`);
 
       app.use(
         path,

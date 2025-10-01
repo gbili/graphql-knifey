@@ -1,0 +1,1 @@
+- you will find all mentioned projects in /Volumes/AppleFS/kDrive/Documents/workspace (i.e. ../)
