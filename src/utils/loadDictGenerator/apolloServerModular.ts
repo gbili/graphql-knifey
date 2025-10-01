@@ -47,33 +47,45 @@ const DEFAULT_MIDDLEWARE_CONFIG: MiddlewarePathConfig = createGraphqlMiddlewareC
  * This replaces the monolithic apolloSubgraphServer approach while maintaining
  * subgraph-specific requirements (disabled landing page, no CSRF, etc.)
  */
-// Named parameters for better API
-export type LoadDictGenParams = {
-  resolvers: Resolvers<any>;
-  typeDefs: ReturnType<typeof gql>;
-  middlewareConfig?: MiddlewarePathConfig;
-};
+// Named parameters for better API - conditional based on server type
+export type LoadDictGenParams<T extends 'subgraph' | 'standalone' | 'gateway'> =
+  T extends 'gateway'
+    ? {
+        middlewareConfig?: MiddlewarePathConfig;
+      }
+    : {
+        resolvers: Resolvers<any>;
+        typeDefs: ReturnType<typeof gql>;
+        middlewareConfig?: MiddlewarePathConfig;
+      };
 
 /**
  * To load it call di.load('expressLauncher')
- * @param isSubgraph
+ * @param serverType - 'subgraph' | 'standalone' | 'gateway'
  * @returns
  */
-const loadDictGenGen = (isSubgraph: boolean) => (params: LoadDictGenParams): LoadDict => {
-  const {
-    resolvers,
-    typeDefs,
-    middlewareConfig = DEFAULT_MIDDLEWARE_CONFIG
-  } = params;
-  // Return a LoadDict with loaders for typeDefs, resolvers, and the main orchestrator
-  return {
-    ...loadDict,
-    // Inject the typeDefs and resolvers as a new loader
-    typeDefs: { instance: typeDefs },
-    resolvers: { instance: resolvers },
-    isSubgraph: { instance: isSubgraph },
-    middlewareConfig: { instance: middlewareConfig },
+const loadDictGenGen = <T extends 'subgraph' | 'standalone' | 'gateway'>(serverType: T) =>
+  (params: LoadDictGenParams<T>): LoadDict => {
+    const { middlewareConfig = DEFAULT_MIDDLEWARE_CONFIG } = params;
+
+    // For gateway, don't need typeDefs/resolvers
+    if (serverType === 'gateway') {
+      return {
+        ...loadDict,
+        serverType: { instance: serverType },
+        middlewareConfig: { instance: middlewareConfig },
+      };
+    }
+
+    // For subgraph/standalone, need typeDefs/resolvers
+    const { resolvers, typeDefs } = params as LoadDictGenParams<'subgraph' | 'standalone'>;
+    return {
+      ...loadDict,
+      typeDefs: { instance: typeDefs },
+      resolvers: { instance: resolvers },
+      serverType: { instance: serverType },
+      middlewareConfig: { instance: middlewareConfig },
+    };
   };
-}
 
 export default loadDictGenGen;

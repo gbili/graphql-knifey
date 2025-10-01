@@ -2,9 +2,9 @@ import { LoadDictElement } from "di-why/build/src/DiContainer";
 import { ApolloServerPlugin } from "@apollo/server";
 
 const loadDictElement: LoadDictElement<ApolloServerPlugin[]> = {
-  before: async ({ serviceLocator, deps: { isSubgraph } }) => {
+  before: async ({ serviceLocator, deps: { serverType } }) => {
     const a = await serviceLocator.get('apolloHttpDrainPlugin');
-    if (isSubgraph) {
+    if (serverType === 'subgraph') {
       const b = await serviceLocator.get('apolloLandingPagePlugin');
       return [a, b];
     }
@@ -14,7 +14,7 @@ const loadDictElement: LoadDictElement<ApolloServerPlugin[]> = {
     return loadedPluginsList;
   },
   locateDeps: {
-    isSubgraph: 'isSubgraph',
+    serverType: 'serverType',
   },
 }
 

@@ -41,8 +41,9 @@ import {
 
 export const apolloContextLDEGen = ctx;
 export { subgraphServerLDE, standaloneServerLDE };
-export const apolloSubgraphServerModularLDGen = loadDictGenGen(true);
-export const apolloStandaloneServerModularLDGen = loadDictGenGen(false);
+export const apolloSubgraphServerModularLDGen = loadDictGenGen('subgraph');
+export const apolloStandaloneServerModularLDGen = loadDictGenGen('standalone');
+export const apolloGatewayServerModularLDGen = loadDictGenGen('gateway');
 
 // Export Apollo modular types
 export type {

@@ -23,19 +23,17 @@ export type PublicGraphContext = {
 
 const loadDictElement: LoadDictElement<MiddlewareAttacher> = {
   // IMPORTANT, this is where we load apolloServer
-  before: async ({ serviceLocator, deps: { appConfig, isSubgraph, app, apolloContext, logger } }) => {
-    // Determine which Apollo server type to load
+  before: async ({ serviceLocator, deps: { appConfig, serverType, app, apolloContext, logger } }) => {
+    // Determine which Apollo server type to load based on serverType config
     const apolloServerHandle = (() => {
-      if (isSubgraph) return 'apolloSubgraphServer';
-      if (serviceLocator.couldLoad('apolloGatewayServer')) return 'apolloGatewayServer';
+      if (serverType === 'subgraph') return 'apolloSubgraphServer';
+      if (serverType === 'gateway') return 'apolloGatewayServer';
       return 'apolloStandaloneServer';
     })();
 
     if (!serviceLocator.couldLoad(apolloServerHandle)) {
-      throw new Error(`With the current setup, there is no way to load an apolloServer instance. isSubgraph: ${isSubgraph}, trying to load: ${apolloServerHandle}`);
+      throw new Error(`With the current setup, there is no way to load an apolloServer instance. serverType: ${serverType}, trying to load: ${apolloServerHandle}`);
     };
-
-    const isGateway = apolloServerHandle === 'apolloGatewayServer';
 
     return {
       app,
@@ -43,8 +41,7 @@ const loadDictElement: LoadDictElement<MiddlewareAttacher> = {
       apolloContext,
       appConfig,
       logger,
-      isSubgraph,
-      isGateway,
+      serverType,
     };
   },
   locateDeps: {
@@ -52,7 +49,7 @@ const loadDictElement: LoadDictElement<MiddlewareAttacher> = {
     apolloContext: 'apolloContext',
     appConfig: 'appConfig',
     logger: 'logger',
-    isSubgraph: 'isSubgraph',
+    serverType: 'serverType',
   },
   factory({
     app,
@@ -60,16 +57,14 @@ const loadDictElement: LoadDictElement<MiddlewareAttacher> = {
     apolloContext,
     appConfig,
     logger,
-    isSubgraph,
-    isGateway
+    serverType
   }: {
     app: Application;
     apolloServer: ApolloServer<any>;
     apolloContext: any;
     appConfig: any;
     logger: Logger;
-    isSubgraph?: boolean;
-    isGateway?: boolean;
+    serverType?: 'subgraph' | 'gateway' | 'standalone';
   }) {
     const {
       cookieDomain,
@@ -86,18 +81,18 @@ const loadDictElement: LoadDictElement<MiddlewareAttacher> = {
         throw new Error('graphqlMiddleware requires a specific path, not global');
       }
       // Log GraphQL-specific information
-      const serverType = isSubgraph ? 'Subgraph' : (isGateway ? 'Gateway' : 'Standalone');
-      logger.log(`✅ Apollo ${serverType} server configured at ${path}`);
+      const typeLabel = serverType === 'subgraph' ? 'Subgraph' : (serverType === 'gateway' ? 'Gateway' : 'Standalone');
+      logger.log(`✅ Apollo ${typeLabel} server configured at ${path}`);
 
       app.use(
         path,
         expressMiddleware(apolloServer, {
         context: async ({ req, res }): Promise<PublicGraphContext> => {
           logger.log('[APOLLO DEBUG] Context creation started');
-          logger.log('[APOLLO DEBUG] Is subgraph:', isSubgraph);
+          logger.log('[APOLLO DEBUG] Server type:', serverType);
 
           // For subgraphs, skip cookie and CSRF handling
-          if (isSubgraph) {
+          if (serverType === 'subgraph') {
             // Subgraphs only need basic context without cookies
             const extra = typeof apolloContext === 'function'
               ? await apolloContext({ req, res })
