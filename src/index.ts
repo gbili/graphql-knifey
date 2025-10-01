@@ -43,6 +43,7 @@ import {
   type DATPayload,
   type DATAuthServiceConfig
 } from "./services/DATAuthService";
+import datAuthServiceLDE from "./loaders/datAuthService";
 
 export const apolloContextLDEGen = ctx;
 export { subgraphServerLDE, standaloneServerLDE };
@@ -129,6 +130,7 @@ export {
   DATAuthService,
   type DATPayload,
   type DATAuthServiceConfig,
+  datAuthServiceLDE,
 };
 
 export default graphqlKnifeyLoadDict;
