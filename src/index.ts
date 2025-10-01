@@ -38,6 +38,11 @@ import {
   type AuthContextResult,
   type AuthMode
 } from "./utils/createAuthContext";
+import {
+  DATAuthService,
+  type DATPayload,
+  type DATAuthServiceConfig
+} from "./services/DATAuthService";
 
 export const apolloContextLDEGen = ctx;
 export { subgraphServerLDE, standaloneServerLDE };
@@ -119,6 +124,11 @@ export {
   type AuthContextResult,
   type AuthMode,
   type PublicGraphContextWithAuth,
+
+  // DAT Auth Service
+  DATAuthService,
+  type DATPayload,
+  type DATAuthServiceConfig,
 };
 
 export default graphqlKnifeyLoadDict;
