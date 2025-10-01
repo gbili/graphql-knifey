@@ -1,4 +1,4 @@
-import { isMeantToBeTrue, areDBKeysInEnv, envHasKeyGen, getTypedKey, UnknownEnv } from "swiss-army-knifey";
+import { isMeantToBeTrue, envHasKeyGen, getTypedKey, UnknownEnv } from "swiss-army-knifey";
 
 const appConfigMap = function (env: UnknownEnv & {
   APP_PORT?: string;
@@ -33,10 +33,6 @@ const appConfigMap = function (env: UnknownEnv & {
     env['LOGGER_DEBUG'] = '1';
   }
 
-  // Validation
-  if (!areDBKeysInEnv(env)) {
-    throw new Error('Missing some Db Env Vars');
-  }
   if (undefined === env.APPLICATION_NAME) {
     throw new Error('Missing .env var APPLICATION_NAME, ex: "My App" used as brand name in email verification');
   }
