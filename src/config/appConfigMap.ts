@@ -18,9 +18,11 @@ const appConfigMap = function (env: UnknownEnv & {
   JWT_ISSUER?: string;
   JWT_AUDIENCE?: string;
 }) {
-  // JWT configuration
+  // JWT configuration - only used by datAuthServiceLDE, so make optional
   const pubKeyInEnv = 'JWT_KEY_PUBLIC';
-  env[pubKeyInEnv] = getTypedKey(env, pubKeyInEnv);
+  if (env[pubKeyInEnv]) {
+    env[pubKeyInEnv] = getTypedKey(env, pubKeyInEnv);
+  }
   const hasKey = envHasKeyGen(env);
 
   if (!hasKey('JWT_ALGORITHM')) {
@@ -70,8 +72,9 @@ const appConfigMap = function (env: UnknownEnv & {
       ? env.APOLLO_MIDDLEWARES_LIST.split(',').map(s => s.trim())
       : undefined,
     // Include the processed env values for JWT and logging
-    jwtPublicKey: env.JWT_KEY_PUBLIC,
-    jwtAlgorithm: env.JWT_ALGORITHM,
+    // These are optional - only needed if using datAuthServiceLDE
+    jwtPublicKey: env.JWT_KEY_PUBLIC || undefined,
+    jwtAlgorithm: env.JWT_ALGORITHM || undefined,
     jwtIssuer: env.JWT_ISSUER || undefined,
     jwtAudience: env.JWT_AUDIENCE || undefined,
     loggerLog: env.LOGGER_LOG,
