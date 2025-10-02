@@ -15,6 +15,8 @@ const appConfigMap = function (env: UnknownEnv & {
   SESSION_COOKIE_NAME?: string;
   REFRESH_COOKIE_NAME?: string;
   APOLLO_MIDDLEWARES_LIST?: string;
+  JWT_ISSUER?: string;
+  JWT_AUDIENCE?: string;
 }) {
   // JWT configuration
   const pubKeyInEnv = 'JWT_KEY_PUBLIC';
@@ -70,6 +72,8 @@ const appConfigMap = function (env: UnknownEnv & {
     // Include the processed env values for JWT and logging
     jwtPublicKey: env.JWT_KEY_PUBLIC,
     jwtAlgorithm: env.JWT_ALGORITHM,
+    jwtIssuer: env.JWT_ISSUER || undefined,
+    jwtAudience: env.JWT_AUDIENCE || undefined,
     loggerLog: env.LOGGER_LOG,
     loggerDebug: env.LOGGER_DEBUG,
   };
