@@ -112,41 +112,8 @@ const loadDictElement: LoadDictElement<MiddlewareAttacher> = {
           logger.log('[APOLLO DEBUG] Cookie parser available:', !!req.cookies);
           logger.log('[APOLLO DEBUG] Signed cookies available:', !!req.signedCookies);
 
-          // CSRF Protection for mutations (double-submit cookie pattern)
-          // Only applies to standalone servers using cookie-based auth
-          // - Gateways: use Apollo's built-in csrfPrevention
-          // - Subgraphs: server-to-server only, no CSRF risk
-          const requestBody = req.body;
-          const isMutation = requestBody?.query?.includes('mutation');
-
-          if (isMutation && serverType === 'standalone') {
-            logger.log('[CSRF DEBUG] Mutation detected, checking CSRF token');
-            const csrfCookie = req.cookies?.['csrf-token'];
-            const csrfHeader = req.headers['x-csrf-token'];
-
-            logger.log('[CSRF DEBUG] CSRF cookie present:', !!csrfCookie);
-            logger.log('[CSRF DEBUG] CSRF header present:', !!csrfHeader);
-            logger.log('[CSRF DEBUG] CSRF cookie value (first 10):', typeof csrfCookie === 'string' ? csrfCookie.substring(0, 10) : csrfCookie);
-            logger.log('[CSRF DEBUG] CSRF header value (first 10):', typeof csrfHeader === 'string' ? (csrfHeader as string).substring(0, 10) : csrfHeader);
-            logger.log('[CSRF DEBUG] CSRF values match:', csrfCookie === csrfHeader);
-
-            // Only enforce CSRF if we're using cookie-based auth
-            const checkCookies = (req.signedCookies && Object.keys(req.signedCookies).length > 0)
-              ? req.signedCookies
-              : (req.cookies ?? {});
-            const hasAuthCookie = !!(checkCookies[accessCookieName] || checkCookies[refreshCookieName]);
-
-            if (hasAuthCookie) {
-              logger.log('[CSRF DEBUG] Auth cookies present, enforcing CSRF protection');
-              if (!csrfCookie || !csrfHeader || csrfCookie !== csrfHeader) {
-                logger.error('[CSRF DEBUG] CSRF validation failed!');
-                throw new Error('CSRF token validation failed');
-              }
-              logger.log('[CSRF DEBUG] CSRF validation passed');
-            } else {
-              logger.log('[CSRF DEBUG] No auth cookies, skipping CSRF check (JWT auth)');
-            }
-          }
+          // CSRF protection is handled by Apollo Server's built-in csrfPrevention setting
+          // See apolloGatewayServer.ts and apolloStandaloneServer.ts for configuration
 
           // Prefer signed cookies if cookieSecret is set and they exist
           const cookies = (req.signedCookies && Object.keys(req.signedCookies).length > 0)
