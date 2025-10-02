@@ -73,7 +73,7 @@ const appConfigMap = function (env: UnknownEnv & {
       : undefined,
     // Include the processed env values for JWT and logging
     // These are optional - only needed if using datAuthServiceLDE
-    jwtPublicKey: env.JWT_KEY_PUBLIC || undefined,
+    jwtKeyPublic: env.JWT_KEY_PUBLIC || undefined,
     jwtAlgorithm: env.JWT_ALGORITHM || undefined,
     jwtIssuer: env.JWT_ISSUER || undefined,
     jwtAudience: env.JWT_AUDIENCE || undefined,
