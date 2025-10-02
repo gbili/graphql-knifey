@@ -113,10 +113,11 @@ const loadDictElement: LoadDictElement<MiddlewareAttacher> = {
           logger.log('[APOLLO DEBUG] Signed cookies available:', !!req.signedCookies);
 
           // CSRF Protection for mutations (double-submit cookie pattern)
+          // Skip for gateways since Apollo Server has its own csrfPrevention enabled
           const requestBody = req.body;
           const isMutation = requestBody?.query?.includes('mutation');
 
-          if (isMutation) {
+          if (isMutation && serverType !== 'gateway') {
             logger.log('[CSRF DEBUG] Mutation detected, checking CSRF token');
             const csrfCookie = req.cookies?.['csrf-token'];
             const csrfHeader = req.headers['x-csrf-token'];
