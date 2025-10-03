@@ -43,7 +43,13 @@ import {
   type DATPayload,
   type DATAuthServiceConfig
 } from "./services/DATAuthService";
+import {
+  DATAuthMinterService,
+  type DATClaims,
+  type DATAuthMinterServiceConfig
+} from "./services/DATAuthMinterService";
 import datAuthServiceLDE from "./loaders/datAuthService";
+import datAuthMinterServiceLDE from "./loaders/datAuthMinterService";
 
 export const apolloContextLDEGen = ctx;
 export { subgraphServerLDE, standaloneServerLDE };
@@ -126,11 +132,17 @@ export {
   type AuthMode,
   type PublicGraphContextWithAuth,
 
-  // DAT Auth Service
+  // DAT Auth Service (for subgraphs - validation)
   DATAuthService,
   type DATPayload,
   type DATAuthServiceConfig,
   datAuthServiceLDE,
+
+  // DAT Auth Minter Service (for gateways - minting)
+  DATAuthMinterService,
+  type DATClaims,
+  type DATAuthMinterServiceConfig,
+  datAuthMinterServiceLDE,
 };
 
 export default graphqlKnifeyLoadDict;

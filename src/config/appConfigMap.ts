@@ -17,11 +17,17 @@ const appConfigMap = function (env: UnknownEnv & {
   APOLLO_MIDDLEWARES_LIST?: string;
   JWT_ISSUER?: string;
   JWT_AUDIENCE?: string;
+  JWT_KEY_PRIVATE?: string;
+  DAT_TTL?: string;
 }) {
-  // JWT configuration - only used by datAuthServiceLDE, so make optional
+  // JWT configuration - only used by datAuthServiceLDE/datServiceLDE, so make optional
   const pubKeyInEnv = 'JWT_KEY_PUBLIC';
   if (env[pubKeyInEnv]) {
     env[pubKeyInEnv] = getTypedKey(env, pubKeyInEnv);
+  }
+  const privKeyInEnv = 'JWT_KEY_PRIVATE';
+  if (env[privKeyInEnv]) {
+    env[privKeyInEnv] = getTypedKey(env, privKeyInEnv);
   }
   const hasKey = envHasKeyGen(env);
 
@@ -72,11 +78,13 @@ const appConfigMap = function (env: UnknownEnv & {
       ? env.APOLLO_MIDDLEWARES_LIST.split(',').map(s => s.trim())
       : undefined,
     // Include the processed env values for JWT and logging
-    // These are optional - only needed if using datAuthServiceLDE
+    // These are optional - only needed if using datAuthServiceLDE/datServiceLDE
     jwtKeyPublic: env.JWT_KEY_PUBLIC || undefined,
+    jwtKeyPrivate: env.JWT_KEY_PRIVATE || undefined,
     jwtAlgorithm: env.JWT_ALGORITHM || undefined,
     jwtIssuer: env.JWT_ISSUER || undefined,
     jwtAudience: env.JWT_AUDIENCE || undefined,
+    datTtl: env.DAT_TTL ? parseInt(env.DAT_TTL) : 180, // Default 3 minutes
     loggerLog: env.LOGGER_LOG,
     loggerDebug: env.LOGGER_DEBUG,
   };
