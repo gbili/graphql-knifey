@@ -5,7 +5,6 @@ import deDoubleEscape from '../../utils/deDoubleEscape';
 
 const loadDictElement: LoadDictElement<TokenConfig> = {
   factory: ({ appConfig }) => {
-    if (!appConfig.jwtKeyPrivate) throw new Error('Missing appConfig.jwtKeyPrivate for JWT validation');
     if (!appConfig.jwtKeyPublic) throw new Error('Missing appConfig.jwtKeyPublic for JWT validation');
     if (!appConfig.jwtAlgorithm) throw new Error('Missing appConfig.jwtAlgorithm for JWT validation');
     if (!appConfig.jwtAudience) throw new Error('Missing appConfig.jwtAudience for JWT validation');
