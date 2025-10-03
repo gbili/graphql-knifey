@@ -10,6 +10,8 @@ import gkAppConfigMap from "../config/appConfigMap";
 import { gkAppConfigMapNamespace } from "../utils/gkAppConfigMapListAdd";
 import graphqlMiddleware from './expressMiddlewares/graphqlMiddleware';
 import { graphqlMiddlewareHandle } from '../middleware';
+import datAuthMinterServiceLDE from './datAuthMinterService';
+import datAuthServiceLDE from './datAuthService';
 
 export const loadDict: LoadDict = {
   // Start with the complete Express server foundation from express-knifey
@@ -19,6 +21,10 @@ export const loadDict: LoadDict = {
   apolloSubgraphServer,
   apolloStandaloneServer,
   apolloGatewayServer,
+
+  // DAT services for gateway -> subgraph: authentication forwarding
+  datAuthMintService: datAuthMinterServiceLDE,
+  datAuthService: datAuthServiceLDE,
 
   // Apollo plugins
   ...apolloPluginsDict, // available plugins
