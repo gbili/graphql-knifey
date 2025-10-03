@@ -4,21 +4,27 @@ import getValidAlgorithmAndKeysObject from 'jwt-authorized/build/src/utils/valid
 import deDoubleEscape from '../../utils/deDoubleEscape';
 
 const loadDictElement: LoadDictElement<TokenConfig> = {
-  factory: ({ env }) => {
-    const algorithm = env.JWT_ALGORITHM || 'HS256';
-    const hoursBeforeExpire = env.JWT_HOURS_BEFORE_EXPIRE || '1';
-    const privateKey = deDoubleEscape(env, 'JWT_KEY_PRIVATE');
-    const publicKey = deDoubleEscape(env, 'JWT_KEY_PUBLIC');
-    const validHoursBeforeExpire = parseInt(hoursBeforeExpire);
-    const algoAndKeys = getValidAlgorithmAndKeysObject(algorithm, privateKey, publicKey);
+  factory: ({ appConfig }) => {
+    if (!appConfig.jwtKeyPrivate) throw new Error('Missing appConfig.jwtKeyPrivate for JWT validation');
+    if (!appConfig.jwtKeyPublic) throw new Error('Missing appConfig.jwtKeyPublic for JWT validation');
+    if (!appConfig.jwtAlgorithm) throw new Error('Missing appConfig.jwtAlgorithm for JWT validation');
+    if (!appConfig.jwtAudience) throw new Error('Missing appConfig.jwtAudience for JWT validation');
+    if (!appConfig.jwtHoursBeforeExpire) throw new Error('Missing appConfig.jwtHoursBeforeExpire for JWT minting');
+
+    const algoAndKeys = getValidAlgorithmAndKeysObject(
+      appConfig.jwtAlgorithm,
+      deDoubleEscape(appConfig, 'jwtKeyPrivate'),
+      deDoubleEscape(appConfig, 'jwtKeyPublic')
+    );
 
     return tokenConfigGenerator({
-      expireTokensEveryNHours: validHoursBeforeExpire,
+      expireTokensEveryNHours: appConfig.jwtHoursBeforeExpire,
+      ...{ requiredAud: appConfig.jwtAudience },
       ...algoAndKeys,
     });
   },
   locateDeps: {
-    env: 'env',
+    appConfig: 'appConfig',
   },
 };
 

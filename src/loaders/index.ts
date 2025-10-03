@@ -12,6 +12,7 @@ import graphqlMiddleware from './expressMiddlewares/graphqlMiddleware';
 import { graphqlMiddlewareHandle } from '../middleware';
 import datAuthMinterServiceLDE from './datAuthMinterService';
 import datAuthServiceLDE from './datAuthService';
+import tokenAuthServiceLDEs from './tokenAuthService';
 
 export const loadDict: LoadDict = {
   // Start with the complete Express server foundation from express-knifey
@@ -25,6 +26,9 @@ export const loadDict: LoadDict = {
   // DAT services for gateway -> subgraph: authentication forwarding
   datAuthMintService: datAuthMinterServiceLDE,
   datAuthService: datAuthServiceLDE,
+
+  // TokenAuthService
+  ...tokenAuthServiceLDEs,
 
   // Apollo plugins
   ...apolloPluginsDict, // available plugins

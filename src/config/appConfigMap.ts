@@ -84,6 +84,7 @@ const appConfigMap = function (env: UnknownEnv & {
     jwtAlgorithm: env.JWT_ALGORITHM || undefined,
     jwtIssuer: env.JWT_ISSUER || undefined,
     jwtAudience: env.JWT_AUDIENCE || undefined,
+    jwtHoursBeforeExpire: parseInt(env.JWT_HOURS_BEFORE_EXPIRE || '1'),
     datTtl: env.DAT_TTL ? parseInt(env.DAT_TTL) : 180, // Default 3 minutes
     loggerLog: env.LOGGER_LOG,
     loggerDebug: env.LOGGER_DEBUG,

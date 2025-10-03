@@ -10,7 +10,6 @@ const loadDictElement: LoadDictElement<GetInstanceType<typeof TokenAuthCustomiza
   },
   locateDeps: {
     events: 'events',
-    env: 'env',
     tokenConfig: 'tokenConfig',
   },
 };
