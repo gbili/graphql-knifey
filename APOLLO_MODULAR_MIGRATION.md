@@ -49,7 +49,7 @@ loaders/
 ### Using the New Modular Approach
 
 ```typescript
-import { apolloStandaloneServerModularLDEGen } from 'graphql-knifey';
+import { apolloStandaloneServerModularLDGen } from 'graphql-knifey';
 import gql from 'graphql-tag';
 import { LoadDict } from 'di-why/build/src/DiContainer';
 
@@ -164,8 +164,8 @@ const injectionDict: LoadDict = {
 
 The original `apolloStandaloneServerLDEGen` is still available for backward compatibility. To migrate:
 
-1. Replace `apolloStandaloneServerLDEGen` with `apolloStandaloneServerModularLDEGen`
-2. The API is identical - same parameters and usage
+1. Replace `apolloStandaloneServerLDEGen` with `apolloStandaloneServerModularLDGen`
+2. The API is identical – same parameters and usage
 3. Add the returned LoadDict to your injection dict
 4. Load `apolloStandaloneServerModular` instead of the previous loader name
 

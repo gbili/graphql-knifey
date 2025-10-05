@@ -1,449 +1,90 @@
-# Identity Mapping: SwissOID → Gateway → Database
+# Identity Mapping: SwissOID → Gateway → Services
 
-This document explains how user identity flows through the authentication system, from SwissOID to the database and back.
+This document summarises how SwissOID identities flow through the relying-party stack and end up persisted in the `cronide-user` database. It reflects the current `(externalIssuer, externalSubject)` design that replaced the legacy `externalUUID` field.
 
-## Overview
+## SwissOID Claims
 
-The system uses **external identity providers** (SwissOID) and maps them to **internal user records** in the database. The key linking field is `externalUUID`, which stores the SwissOID `sub` (subject) claim.
+The SwissOID OpenID provider yields standard OIDC claims:
 
----
-
-## SwissOID Claims Structure
-
-### What SwissOID Returns
-
-Based on SwissOID's OpenID Configuration and `swissoid-back` implementation:
-
-```typescript
-// id_token claims from SwissOID
+```ts
 interface SwissOIDClaims {
-  // Standard OIDC claims
-  iss: string;              // "https://api.swissoid.com"
-  sub: string;              // ← PRIMARY IDENTITY (e.g., "swissoid|123456789")
-  aud: string;              // client_id (e.g., "clockize")
-  exp: number;              // Expiration timestamp
-  iat: number;              // Issued at timestamp
-  nbf?: number;             // Not before
-  jti?: string;             // JWT ID
-  nonce: string;            // Replay protection
-
-  // Profile claims (if scope includes 'profile')
-  name?: string;            // "John Doe"
-  given_name?: string;      // "John"
-  family_name?: string;     // "Doe"
-  picture?: string;         // URL to profile picture
-
-  // Email claims (if scope includes 'email')
-  email?: string;           // "user@example.com"
-  email_verified?: boolean; // true/false
-
-  // Authentication context
-  amr?: string[];           // Authentication Method Reference
-  acr?: string;             // Authentication Context Class Reference
-  auth_time?: number;       // When user authenticated
+  iss: string;           // e.g. "https://api.swissoid.com"
+  sub: string;           // subject identifier scoped to the issuer
+  aud: string;           // client_id registered with SwissOID
+  exp: number;
+  iat: number;
+  nonce: string;
+  email?: string;
+  email_verified?: boolean;
+  name?: string;
+  given_name?: string;
+  family_name?: string;
 }
 ```
 
-### Supported Scopes
+The `(iss, sub)` tuple uniquely identifies a SwissOID account.
 
-```
-openid              // Required, provides sub
-email               // Adds email, email_verified
-profile             // Adds name, given_name, family_name, picture
-```
+## Database Representation (`cronide-user`)
 
----
-
-## cronide-user Database Structure
-
-### Tables
+The user service now stores the tuple directly on the main `User` table:
 
 ```sql
--- Main user table
 CREATE TABLE User (
-  UUID varchar(255) NOT NULL,        -- Internal user ID (generated)
-  isAllowed int(1) NOT NULL DEFAULT 1,
-  PRIMARY KEY (UUID)
+  UUID            varchar(255) NOT NULL,
+  isAllowed       tinyint(1)   NOT NULL DEFAULT 1,
+  externalIssuer  varchar(255) DEFAULT NULL,
+  externalSubject varchar(255) DEFAULT NULL,
+  email           varchar(255) DEFAULT NULL,
+  username        varchar(255) DEFAULT NULL,
+  PRIMARY KEY (UUID),
+  UNIQUE KEY unique_external_auth (externalIssuer, externalSubject)
 );
 
--- Key-value metadata table
 CREATE TABLE User_to_Metas (
-  ID INT NOT NULL AUTO_INCREMENT,
-  userUUID varchar(255) NOT NULL,    -- FK to User.UUID
-  name varchar(255) NOT NULL,         -- Meta key
-  value varchar(255) NOT NULL,        -- Meta value
-  PRIMARY KEY (ID),
-  UNIQUE (userUUID, name, value),
+  ID        int AUTO_INCREMENT PRIMARY KEY,
+  userUUID  varchar(255) NOT NULL,
+  name      varchar(255) NOT NULL,
+  value     varchar(255) NOT NULL,
+  UNIQUE KEY uniq_triplet (userUUID, name, value),
   FOREIGN KEY (userUUID) REFERENCES User(UUID) ON DELETE CASCADE
 );
 ```
 
-### User Metadata Fields
+Metadata such as `email` and `username` are stored via `User_to_Metas` (with the table populated through the `userMetas` configuration in code). The old `externalUUID` meta is no longer required because the issuer+subject combination is now enforced at the schema level.
 
-Configured via `USER_METAS=email,username` plus always-included `externalUUID`:
+## Runtime Flow
 
-| Meta Name | Source | Example | Purpose |
-|-----------|--------|---------|---------|
-| **externalUUID** | SwissOID `sub` | `"swissoid\|123456789"` | **PRIMARY LINK** to external identity |
-| email | SwissOID `email` | `"user@example.com"` | User's email |
-| username | Derived | `"johndoe"` | Display name |
+1. **SwissOID login** – `swissoid-back` handles the Authorization Code flow, validates the ID token, and surfaces the claims to the gateway.
+2. **Gateway registration** – `cronide-gateway` calls the `upsertUser` mutation exposed by `cronide-user`, sending `externalIssuer`, `externalSubject`, plus optional email/username fields. See `cronide-gateway/src/services/OidcUserRegistrar.ts` for the exact payload builder.
+3. **Persistence** – `cronide-user/src/models/UserModel.ts` performs an `INSERT ... ON DUPLICATE KEY UPDATE` against the `User` table using the `(externalIssuer, externalSubject)` unique key. Metadata rows are upserted in the same transaction.
+4. **Downstream access** – `cronide-gateway` stores the resulting internal UUID in the HTTP session and mints DATs containing that UUID for subgraphs (e.g. cronide-tag, cronide-project) to consume.
 
-### Example Data
+When subgraphs validate the DAT (via `graphql-knifey`’s `DATAuthService`) they obtain the internal UUID and can call `cronide-user` to resolve the user record if needed.
 
-```sql
--- User table
-UUID                                  | isAllowed
---------------------------------------|----------
-550e8400-e29b-41d4-a716-446655440000  | 1
-
--- User_to_Metas table
-userUUID                              | name          | value
---------------------------------------|---------------|----------------------
-550e8400-e29b-41d4-a716-446655440000  | externalUUID  | swissoid|123456789
-550e8400-e29b-41d4-a716-446655440000  | email         | user@example.com
-550e8400-e29b-41d4-a716-446655440000  | username      | johndoe
-```
-
----
-
-## Field Mapping: SwissOID → cronide-user
-
-### 1:1 Mappings
-
-| SwissOID Claim | cronide-user Meta | Notes |
-|----------------|-------------------|-------|
-| `sub` | `externalUUID` | **THE PRIMARY KEY MAPPING** - Never changes |
-| `email` | `email` | Optional, depends on scope |
-
-### Derived Mappings
-
-| cronide-user Meta | Derivation Logic | Example |
-|-------------------|------------------|---------|
-| `username` | `preferred_username` OR `username` OR `name` OR `email.split('@')[0]` | `"johndoe"` |
-
-### Implementation in oidcUserRegistrar
-
-```typescript
-// cronide-user/src/loaders/oidcUserRegistrar.ts
-const externalUUID = claims.sub;  // SwissOID subject
-
-const username = claims.preferred_username
-  || claims.username
-  || claims.name
-  || (claims.email ? String(claims.email).split('@')[0] : undefined);
-
-await userModel.registerUser({
-  user: {
-    UUID: externalUUID,           // ← Maps sub to externalUUID
-    username,                      // ← Derived username
-    email: claims.email ? String(claims.email) : undefined
-  },
-  isAllowed: autoAllow
-});
-```
-
-**Note:** SwissOID doesn't return `preferred_username` or `username` - only `name`. The fallback chain handles this.
-
----
-
-## Identity Flow: Complete Journey
-
-### Phase 1-4: Current State (Auth in cronide-user)
+## Example
 
 ```
-┌─────────┐
-│ Browser │
-└────┬────┘
-     │ 1. GET /login
-     ↓
-┌─────────────┐
-│ Gateway     │ (Proxy only)
-└──────┬──────┘
-       │ 2. Proxy to cronide-user
-       ↓
-┌──────────────┐
-│ cronide-user │
-└──────┬───────┘
-       │ 3. Redirect to SwissOID
-       ↓
-┌──────────────┐
-│   SwissOID   │
-└──────┬───────┘
-       │ 4. User authenticates
-       │ 5. Callback with code
-       ↓
-┌──────────────┐
-│ cronide-user │
-└──────┬───────┘
-       │ 6. Exchange code for tokens
-       │ 7. Verify id_token
-       │ 8. Extract claims:
-       │    { sub: "swissoid|123", email: "...", name: "..." }
-       │ 9. Check/Register user in DB
-       │    - Lookup by externalUUID = sub
-       │    - If not exists, INSERT new user
-       │ 10. Create session with sub
-       │ 11. Set cookie
-       ↓
-┌─────────┐
-│ Browser │ (Has cookie with session)
-└─────────┘
+SwissOID claims          Gateway payload               User table row
+-----------------------  ----------------------------  ------------------------------------------
+iss = https://api...     externalIssuer  = https://…   UUID            = 88c4... (generated)
+sub = swissoid|123456    externalSubject = swissoid…   externalIssuer  = https://api.swissoid.com
+email = user@example.ch  email            = …          externalSubject = swissoid|123456
+name  = Ada Example      username         = ada        email           = NULL (meta table)
+                                                        username        = NULL (meta table)
 ```
 
-### Phase 5-7: Target State (Auth in Gateway, DATs to Subgraphs)
+Metadata entries for the example would look like:
 
 ```
-┌─────────┐
-│ Browser │
-└────┬────┘
-     │ 1. GET /login
-     ↓
-┌─────────────┐
-│ Gateway     │ (Auth Handler)
-└──────┬──────┘
-       │ 2. Redirect to SwissOID
-       ↓
-┌──────────────┐
-│   SwissOID   │
-└──────┬───────┘
-       │ 3. Callback with code
-       ↓
-┌─────────────┐
-│ Gateway     │
-└──────┬──────┘
-       │ 4. Exchange code for tokens
-       │ 5. Verify id_token, extract claims
-       │ 6. Call oidcUserRegistrar:
-       │    - GraphQL mutation to cronide-user
-       │    - registerUser({ UUID: sub, ... })
-       │ 7. Create session in Redis:
-       │    { sub: "swissoid|123", email: "..." }
-       │ 8. Set cookie
-       ↓
-┌─────────┐
-│ Browser │ (Makes GraphQL request with cookie)
-└────┬────┘
-     │ 9. POST /graphql + Cookie
-     ↓
-┌─────────────┐
-│ Gateway     │
-└──────┬──────┘
-       │ 10. Validate cookie → Get session
-       │     { sub: "swissoid|123", ... }
-       │ 11. Mint DAT (3min TTL):
-       │     {
-       │       iss: "cronide-gateway",
-       │       aud: "cronide-subgraphs",
-       │       sub: "swissoid|123",  ← Preserved!
-       │       email: "...",
-       │       ...
-       │     }
-       │ 12. Forward: Authorization: Bearer <DAT>
-       ↓
-┌──────────────┐
-│ cronide-user │ (Subgraph)
-└──────┬───────┘
-       │ 13. Validate DAT signature
-       │ 14. Extract claims: { sub: "swissoid|123", ... }
-       │ 15. Lookup user in DB:
-       │     SELECT u.UUID, u.isAllowed
-       │     FROM User u
-       │     JOIN User_to_Metas um ON u.UUID = um.userUUID
-       │     WHERE um.name = 'externalUUID'
-       │       AND um.value = 'swissoid|123'
-       │ 16. Get internalUUID: "550e8400-..."
-       │ 17. Process request with internal user
-       ↓
-┌─────────┐
-│ Browser │ (Receives response)
-└─────────┘
+(UserUUID, name, value)
+(88c4..., 'email',    'user@example.ch')
+(88c4..., 'username', 'ada')
+(88c4..., 'externalIssuer',  'https://api.swissoid.com')
+(88c4..., 'externalSubject', 'swissoid|123456')
 ```
 
----
+> **Note:** the meta rows keep `externalIssuer`/`externalSubject` alongside the dedicated columns so existing reporting that relies on `User_to_Metas` continues to work. New integrations should prefer the columns.
 
-## Key Identity Relationships
+## Legacy Compatibility
 
-### SwissOID `sub` is the Source of Truth
-
-```
-SwissOID sub (external)
-    ↓
-Gateway Session (stores sub)
-    ↓
-DAT Token (contains sub)
-    ↓
-Database externalUUID (stores sub)
-    ↓
-Internal User UUID
-```
-
-### The Mapping
-
-```typescript
-// SwissOID provides
-sub: "swissoid|123456789"
-
-// Gateway stores in session
-{ sub: "swissoid|123456789", email: "...", ... }
-
-// Gateway mints DAT with same sub
-{ iss: "cronide-gateway", sub: "swissoid|123456789", ... }
-
-// Subgraph looks up in database
-externalUUID = "swissoid|123456789"
-  ↓
-internalUUID = "550e8400-e29b-41d4-a716-446655440000"
-```
-
-### Why This Works
-
-1. **SwissOID `sub` never changes** - Permanent identifier for the user
-2. **Gateway passes through `sub`** - No transformation, just forwarding
-3. **Database links external to internal** - Lookup table via `User_to_Metas`
-4. **Subgraphs remain agnostic** - Don't care where the `sub` came from
-
----
-
-## User Registration Flow
-
-### First Time User Logs In
-
-```typescript
-// 1. SwissOID returns claims
-const claims = {
-  sub: "swissoid|987654321",
-  email: "newuser@example.com",
-  name: "Jane Smith"
-};
-
-// 2. Gateway calls oidcUserRegistrar
-await oidcUserRegistrar({ claims });
-
-// 3. Inside oidcUserRegistrar
-const externalUUID = claims.sub;  // "swissoid|987654321"
-
-// 4. Check if user exists
-const existing = await userModel.getUserByExternalUUID({ externalUUID });
-
-if (existing.status === 'fail' && existing.code === 'ERROR_UNKNOWN_UUID') {
-  // 5. User doesn't exist, register them
-
-  // Generate internal UUID
-  const internalUUID = generateUUID();  // "6a8e9f0a-..."
-
-  // 6. Insert into database
-  INSERT INTO User (UUID, isAllowed)
-  VALUES ('6a8e9f0a-...', 1);
-
-  INSERT INTO User_to_Metas (userUUID, name, value) VALUES
-    ('6a8e9f0a-...', 'externalUUID', 'swissoid|987654321'),
-    ('6a8e9f0a-...', 'email', 'newuser@example.com'),
-    ('6a8e9f0a-...', 'username', 'Jane Smith');
-}
-
-// 7. Continue with session creation
-```
-
-### Subsequent Logins
-
-```typescript
-// 1. SwissOID returns same sub
-const claims = { sub: "swissoid|987654321", ... };
-
-// 2. Check if user exists
-const existing = await userModel.getUserByExternalUUID({
-  externalUUID: "swissoid|987654321"
-});
-
-// 3. User found! Skip registration
-if (existing.status === 'success') {
-  // Use existing.payload.user.UUID for session
-  const internalUUID = existing.payload.user.UUID;  // "6a8e9f0a-..."
-
-  // Continue with session creation
-}
-```
-
----
-
-## Security Considerations
-
-### Why externalUUID is in User_to_Metas, Not User Table
-
-1. **Flexibility**: Can store multiple external identities per user
-2. **Future-proofing**: Easy to add other OAuth providers (Google, GitHub)
-3. **Separation of concerns**: User table stays clean and provider-agnostic
-
-### What Happens If SwissOID `sub` Changes?
-
-**Short answer:** It won't. The `sub` claim is immutable per OIDC spec.
-
-**If it somehow did:**
-- User would appear as new user
-- Old records would be orphaned
-- Manual migration required to link old → new
-
-### Multiple Identities (Future)
-
-```sql
--- Same internal user, multiple external identities
-userUUID                              | name          | value
---------------------------------------|---------------|----------------------
-550e8400-e29b-41d4-a716-446655440000  | externalUUID  | swissoid|123456789
-550e8400-e29b-41d4-a716-446655440000  | externalUUID  | google|abc123
-550e8400-e29b-41d4-a716-446655440000  | externalUUID  | github|xyz789
-```
-
-Currently not implemented, but the schema supports it.
-
----
-
-## Troubleshooting
-
-### User Can't Login After Migration
-
-**Symptom:** User exists in cronide-user but can't authenticate through gateway
-
-**Check:**
-1. Does `User_to_Metas` have `externalUUID` for this user?
-   ```sql
-   SELECT * FROM User_to_Metas
-   WHERE name = 'externalUUID' AND value = '<swissoid-sub>';
-   ```
-
-2. Is the `sub` claim in the DAT matching what's in the database?
-   - Decode DAT: `jwt.io`
-   - Compare `sub` value
-
-3. Is `isAllowed = 1` for the user?
-   ```sql
-   SELECT * FROM User WHERE UUID = '<internal-uuid>';
-   ```
-
-### Gateway Says User Registered But Subgraph Says Unknown
-
-**Symptom:** Session created, DAT minted, but subgraph returns "Unknown user"
-
-**Check:**
-1. Is the DAT being validated correctly?
-   - Check subgraph logs for DAT validation errors
-
-2. Is the `sub` claim preserved through the chain?
-   - Session → DAT → Database lookup
-
-3. Database race condition?
-   - Registration might not have committed before DAT validation
-
----
-
-## Summary
-
-| Component | Identity Format | Storage | Purpose |
-|-----------|----------------|---------|---------|
-| **SwissOID** | `sub: "swissoid\|123"` | N/A | Source of truth |
-| **Gateway Session** | `{ sub: "swissoid\|123", ... }` | Redis | Temporary auth state |
-| **DAT Token** | `{ sub: "swissoid\|123", ... }` | JWT (signed) | Short-lived auth proof |
-| **Database** | `externalUUID: "swissoid\|123"` | MySQL | Permanent user record |
-| **Internal ID** | `UUID: "550e8400-..."` | MySQL | Internal operations |
-
-**The key insight:** SwissOID's `sub` flows unchanged through the entire system and serves as the permanent link between external identity and internal user records.
+Older services that still reference `externalUUID` in `User_to_Metas` can continue to read it, but new code should migrate to the issuer+subject tuple. The helper `getUserByExternalUUID` remains available for backwards compatibility; it resolves the historic meta entry if present.
